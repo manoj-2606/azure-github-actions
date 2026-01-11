@@ -19,7 +19,7 @@ not create or modify any Azure resources.
 
 ---
 
-## Objectives
+## Objectivess
 
 - Authenticate GitHub Actions to an Azure subscription
 - Use an Azure Service Principal with least-privilege access
