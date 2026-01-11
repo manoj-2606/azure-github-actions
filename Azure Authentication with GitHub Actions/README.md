@@ -1,29 +1,48 @@
-# Secure Azure Authentication using GitHub Actions
+# Azure Authentication with GitHub Actions
 
 This project demonstrates how to securely authenticate GitHub Actions
 to an Azure subscription using an Azure Service Principal (SPN).
+The focus of this project is Azure identity and access integration
+with CI/CD pipelines, without provisioning any cloud resources.
 
-## Objective
-- Authenticate GitHub Actions to Azure
-- Use Service Principal with least-privilege access
+---
+
+## Project Overview
+
+The workflow in this repository validates that GitHub Actions can
+successfully authenticate to Azure using role-based access control (RBAC).
+Authentication is verified by executing Azure CLI commands from
+a GitHub-hosted runner.
+
+This project is intentionally scoped to authentication only and does
+not create or modify any Azure resources.
+
+---
+
+## Objectives
+
+- Authenticate GitHub Actions to an Azure subscription
+- Use an Azure Service Principal with least-privilege access
+- Securely store credentials using GitHub Secrets
 - Verify authentication using Azure CLI
-- No Azure resources created (zero cost)
+- Ensure zero Azure resource cost during execution
+
+---
 
 ## Technologies Used
+
 - Azure Active Directory
 - Azure Service Principal (RBAC)
 - GitHub Actions
 - Azure CLI
 
-## Workflow
-1. Create Azure Service Principal
-2. Store credentials as GitHub Secret
-3. Authenticate using `azure/login@v1`
-4. Run `az account show` to verify access
+---
 
-## Result
-Successful GitHub Actions run proving Azure authentication works.
+## Repository Structure
 
-## Notes
-- No VMs or Resource Groups are created
-- This project focuses only on authentication
+```text
+azure-github-actions
+├── .github/
+│   └── workflows/
+│       └── azure-login.yml
+├── README.md
