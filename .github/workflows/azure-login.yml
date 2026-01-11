@@ -1,10 +1,10 @@
-name: Azure Login Test
+name: Azure Login and RG Creation Test
 
 on:
   workflow_dispatch:
 
 jobs:
-  login-test:
+  rg-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,6 +13,13 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Verify Azure Access
+      - name: Create Resource Group
         run: |
-          az account show
+          az group create \
+            --name rg-github-actions-demo \
+            --location centralindia
+
+      - name: Verify Resource Group
+        run: |
+          az group show \
+            --name rg-github-actions-demo
