@@ -13,13 +13,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Create Resource Group
-        run: |
-          az group create \
-            --name rg-github-actions-demo \
-            --location centralindia
-
       - name: Verify Resource Group
         run: |
           az group show \
-            --name rg-github-actions-demo
+            --name rg-demo-test
