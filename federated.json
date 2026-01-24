@@ -1,0 +1,8 @@
+{
+    "name": "github-oidc",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:manoj-2606/azure-github-actions:ref:refs/heads/main",
+    "audiences": [
+        "api://AzureADTokenExchange"
+    ]
+}
