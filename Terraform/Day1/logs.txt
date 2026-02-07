@@ -341,3 +341,321 @@ Outputs:
 storage_name = "demostorage26062001"
 subnet_id = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet"
 vnet_id = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet"
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ terraform plan
+azurerm_resource_group.rg: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test]
+azurerm_subnet.subnet: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet]
+azurerm_virtual_network.vnet: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet]
+azurerm_storage_account.storage: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/demostorage26062001]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # azurerm_storage_account.storage will be destroyed
+  # (because azurerm_storage_account.storage is not in configuration)
+  - resource "azurerm_storage_account" "storage" {
+      - access_tier                        = "Hot" -> null
+      - account_kind                       = "StorageV2" -> null
+      - account_replication_type           = "LRS" -> null
+      - account_tier                       = "Standard" -> null
+      - allow_nested_items_to_be_public    = true -> null
+      - cross_tenant_replication_enabled   = true -> null
+      - default_to_oauth_authentication    = false -> null
+      - dns_endpoint_type                  = "Standard" -> null
+      - enable_https_traffic_only          = true -> null
+      - https_traffic_only_enabled         = true -> null
+      - id                                 = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/demostorage26062001" -> null
+      - infrastructure_encryption_enabled  = false -> null
+      - is_hns_enabled                     = false -> null
+      - large_file_share_enabled           = false -> null
+      - local_user_enabled                 = true -> null
+      - location                           = "centralindia" -> null
+      - min_tls_version                    = "TLS1_2" -> null
+      - name                               = "demostorage26062001" -> null
+      - nfsv3_enabled                      = false -> null
+      - primary_access_key                 = (sensitive value) -> null
+      - primary_blob_connection_string     = (sensitive value) -> null
+      - primary_blob_endpoint              = "https://demostorage26062001.blob.core.windows.net/" -> null
+      - primary_blob_host                  = "demostorage26062001.blob.core.windows.net" -> null
+      - primary_connection_string          = (sensitive value) -> null
+      - primary_dfs_endpoint               = "https://demostorage26062001.dfs.core.windows.net/" -> null
+      - primary_dfs_host                   = "demostorage26062001.dfs.core.windows.net" -> null
+      - primary_file_endpoint              = "https://demostorage26062001.file.core.windows.net/" -> null
+      - primary_file_host                  = "demostorage26062001.file.core.windows.net" -> null
+      - primary_location                   = "centralindia" -> null
+      - primary_queue_endpoint             = "https://demostorage26062001.queue.core.windows.net/" -> null
+      - primary_queue_host                 = "demostorage26062001.queue.core.windows.net" -> null
+      - primary_table_endpoint             = "https://demostorage26062001.table.core.windows.net/" -> null
+      - primary_table_host                 = "demostorage26062001.table.core.windows.net" -> null
+      - primary_web_endpoint               = "https://demostorage26062001.z29.web.core.windows.net/" -> null
+      - primary_web_host                   = "demostorage26062001.z29.web.core.windows.net" -> null
+      - public_network_access_enabled      = true -> null
+      - queue_encryption_key_type          = "Service" -> null
+      - resource_group_name                = "rg-demo-test" -> null
+      - secondary_access_key               = (sensitive value) -> null
+      - secondary_connection_string        = (sensitive value) -> null
+      - sftp_enabled                       = false -> null
+      - shared_access_key_enabled          = true -> null
+      - table_encryption_key_type          = "Service" -> null
+      - tags                               = {} -> null
+        # (56 unchanged attributes hidden)
+
+      - blob_properties {
+          - change_feed_enabled           = false -> null
+          - change_feed_retention_in_days = 0 -> null
+          - last_access_time_enabled      = false -> null
+          - versioning_enabled            = false -> null
+            # (1 unchanged attribute hidden)
+        }
+
+      - queue_properties {
+          - hour_metrics {
+              - enabled               = false -> null
+              - include_apis          = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+            }
+          - logging {
+              - delete                = false -> null
+              - read                  = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+              - write                 = false -> null
+            }
+          - minute_metrics {
+              - enabled               = false -> null
+              - include_apis          = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+            }
+        }
+
+      - share_properties {
+          - retention_policy {
+              - days = 7 -> null
+            }
+        }
+    }
+
+  # azurerm_subnet.subnet will be destroyed
+  # (because azurerm_subnet.subnet is not in configuration)
+  - resource "azurerm_subnet" "subnet" {
+      - address_prefixes                               = [
+          - "10.0.1.0/24",
+        ] -> null
+      - default_outbound_access_enabled                = true -> null
+      - enforce_private_link_endpoint_network_policies = false -> null
+      - enforce_private_link_service_network_policies  = false -> null
+      - id                                             = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet" -> null
+      - name                                           = "demosubnet" -> null
+      - private_endpoint_network_policies              = "Enabled" -> null
+      - private_endpoint_network_policies_enabled      = true -> null
+      - private_link_service_network_policies_enabled  = true -> null
+      - resource_group_name                            = "rg-demo-test" -> null
+      - service_endpoint_policy_ids                    = [] -> null
+      - service_endpoints                              = [] -> null
+      - virtual_network_name                           = "demovnet" -> null
+    }
+
+  # azurerm_virtual_network.vnet will be destroyed
+  # (because azurerm_virtual_network.vnet is not in configuration)
+  - resource "azurerm_virtual_network" "vnet" {
+      - address_space           = [
+          - "10.0.0.0/16",
+        ] -> null
+      - dns_servers             = [] -> null
+      - flow_timeout_in_minutes = 0 -> null
+      - guid                    = "368aeab3-ffe7-4036-b497-0e478c4d9167" -> null
+      - id                      = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet" -> null 
+      - location                = "centralindia" -> null
+      - name                    = "demovnet" -> null
+      - resource_group_name     = "rg-demo-test" -> null
+      - subnet                  = [
+          - {
+              - address_prefix = "10.0.1.0/24"
+              - id             = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet"
+              - name           = "demosubnet"
+                # (1 unchanged attribute hidden)
+            },
+        ] -> null
+      - tags                    = {} -> null
+        # (2 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 3 to destroy.
+
+Changes to Outputs:
+  - storage_name = "demostorage26062001" -> null
+  - subnet_id    = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet" -> null
+  - vnet_id      = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet" -> null
+
+terraform apply
+azurerm_resource_group.rg: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test]
+azurerm_subnet.subnet: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet]
+azurerm_virtual_network.vnet: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet]
+azurerm_storage_account.storage: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/demostorage26062001]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # azurerm_storage_account.storage will be destroyed
+  # (because azurerm_storage_account.storage is not in configuration)
+  - resource "azurerm_storage_account" "storage" {
+      - access_tier                        = "Hot" -> null
+      - account_kind                       = "StorageV2" -> null
+      - account_replication_type           = "LRS" -> null
+      - account_tier                       = "Standard" -> null
+      - allow_nested_items_to_be_public    = true -> null
+      - cross_tenant_replication_enabled   = true -> null
+      - default_to_oauth_authentication    = false -> null
+      - dns_endpoint_type                  = "Standard" -> null
+      - enable_https_traffic_only          = true -> null
+      - https_traffic_only_enabled         = true -> null
+      - id                                 = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/demostorage26062001" -> null
+      - infrastructure_encryption_enabled  = false -> null
+      - is_hns_enabled                     = false -> null
+      - large_file_share_enabled           = false -> null
+      - local_user_enabled                 = true -> null
+      - location                           = "centralindia" -> null
+      - min_tls_version                    = "TLS1_2" -> null
+      - name                               = "demostorage26062001" -> null
+      - nfsv3_enabled                      = false -> null
+      - primary_access_key                 = (sensitive value) -> null
+      - primary_blob_connection_string     = (sensitive value) -> null
+      - primary_blob_endpoint              = "https://demostorage26062001.blob.core.windows.net/" -> null
+      - primary_blob_host                  = "demostorage26062001.blob.core.windows.net" -> null
+      - primary_connection_string          = (sensitive value) -> null
+      - primary_dfs_endpoint               = "https://demostorage26062001.dfs.core.windows.net/" -> null
+      - primary_dfs_host                   = "demostorage26062001.dfs.core.windows.net" -> null
+      - primary_file_endpoint              = "https://demostorage26062001.file.core.windows.net/" -> null
+      - primary_file_host                  = "demostorage26062001.file.core.windows.net" -> null
+      - primary_location                   = "centralindia" -> null
+      - primary_queue_endpoint             = "https://demostorage26062001.queue.core.windows.net/" -> null
+      - primary_queue_host                 = "demostorage26062001.queue.core.windows.net" -> null
+      - primary_table_endpoint             = "https://demostorage26062001.table.core.windows.net/" -> null
+      - primary_table_host                 = "demostorage26062001.table.core.windows.net" -> null
+      - primary_web_endpoint               = "https://demostorage26062001.z29.web.core.windows.net/" -> null
+      - primary_web_host                   = "demostorage26062001.z29.web.core.windows.net" -> null
+      - public_network_access_enabled      = true -> null
+      - queue_encryption_key_type          = "Service" -> null
+      - resource_group_name                = "rg-demo-test" -> null
+      - secondary_access_key               = (sensitive value) -> null
+      - secondary_connection_string        = (sensitive value) -> null
+      - sftp_enabled                       = false -> null
+      - shared_access_key_enabled          = true -> null
+      - table_encryption_key_type          = "Service" -> null
+      - tags                               = {} -> null
+        # (56 unchanged attributes hidden)
+
+      - blob_properties {
+          - change_feed_enabled           = false -> null
+          - change_feed_retention_in_days = 0 -> null
+          - last_access_time_enabled      = false -> null
+          - versioning_enabled            = false -> null
+            # (1 unchanged attribute hidden)
+        }
+
+      - queue_properties {
+          - hour_metrics {
+              - enabled               = false -> null
+              - include_apis          = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+            }
+          - logging {
+              - delete                = false -> null
+              - read                  = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+              - write                 = false -> null
+            }
+          - minute_metrics {
+              - enabled               = false -> null
+              - include_apis          = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+            }
+        }
+
+      - share_properties {
+          - retention_policy {
+              - days = 7 -> null
+            }
+        }
+    }
+
+  # azurerm_subnet.subnet will be destroyed
+  # (because azurerm_subnet.subnet is not in configuration)
+  - resource "azurerm_subnet" "subnet" {
+      - address_prefixes                               = [
+          - "10.0.1.0/24",
+        ] -> null
+      - default_outbound_access_enabled                = true -> null
+      - enforce_private_link_endpoint_network_policies = false -> null
+      - enforce_private_link_service_network_policies  = false -> null
+      - id                                             = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet" -> null
+      - name                                           = "demosubnet" -> null
+      - private_endpoint_network_policies              = "Enabled" -> null
+      - private_endpoint_network_policies_enabled      = true -> null
+      - private_link_service_network_policies_enabled  = true -> null
+      - resource_group_name                            = "rg-demo-test" -> null
+      - service_endpoint_policy_ids                    = [] -> null
+      - service_endpoints                              = [] -> null
+      - virtual_network_name                           = "demovnet" -> null
+    }
+
+  # azurerm_virtual_network.vnet will be destroyed
+  # (because azurerm_virtual_network.vnet is not in configuration)
+  - resource "azurerm_virtual_network" "vnet" {
+      - address_space           = [
+          - "10.0.0.0/16",
+        ] -> null
+      - dns_servers             = [] -> null
+      - flow_timeout_in_minutes = 0 -> null
+      - guid                    = "368aeab3-ffe7-4036-b497-0e478c4d9167" -> null
+      - id                      = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet" -> null 
+      - location                = "centralindia" -> null
+      - name                    = "demovnet" -> null
+      - resource_group_name     = "rg-demo-test" -> null
+      - subnet                  = [
+          - {
+              - address_prefix = "10.0.1.0/24"
+              - id             = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet"
+              - name           = "demosubnet"
+                # (1 unchanged attribute hidden)
+            },
+        ] -> null
+      - tags                    = {} -> null
+        # (2 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 3 to destroy.
+
+Changes to Outputs:
+  - storage_name = "demostorage26062001" -> null
+  - subnet_id    = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet" -> null
+  - vnet_id      = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet" -> null
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+azurerm_subnet.subnet: Destroying... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet/subnets/demosubnet]
+azurerm_storage_account.storage: Destroying... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/demostorage26062001]
+azurerm_storage_account.storage: Destruction complete after 5s
+azurerm_subnet.subnet: Still destroying... [id=/subscriptions/4985f681-bfb3-4e92-a131-...alNetworks/demovnet/subnets/demosubnet, 00m10s elapsed]
+azurerm_subnet.subnet: Destruction complete after 12s
+azurerm_virtual_network.vnet: Destroying... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/demovnet]
+azurerm_virtual_network.vnet: Still destroying... [id=/subscriptions/4985f681-bfb3-4e92-a131-...osoft.Network/virtualNetworks/demovnet, 00m10s elapsed]
+azurerm_virtual_network.vnet: Destruction complete after 11s
+
+Apply complete! Resources: 0 added, 0 changed, 3 destroyed.
+PS C:\dev\git\azure-github-actions\Terraform\Day1> 
