@@ -1,0 +1,12 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# local graphs / temp
+*.png
+*.dot
+
+# variables if sensitive
+terraform.tfvars
