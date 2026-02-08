@@ -1,0 +1,235 @@
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+azurerm_virtual_network.vnet: Creating...
+azurerm_storage_account.stg["stg260603"]: Creating...
+azurerm_storage_account.stg["stg260602"]: Creating...
+azurerm_storage_account.stg["stg260605"]: Creating...
+azurerm_storage_account.stg["stg260606"]: Creating...
+azurerm_storage_account.stg["stg260601"]: Creating...
+azurerm_storage_account.stg["stg260604"]: Creating...
+azurerm_virtual_network.vnet: Still creating... [00m10s elapsed]
+azurerm_storage_account.stg["stg260602"]: Still creating... [00m10s elapsed]
+azurerm_storage_account.stg["stg260603"]: Still creating... [00m10s elapsed]
+azurerm_storage_account.stg["stg260605"]: Still creating... [00m10s elapsed]
+azurerm_storage_account.stg["stg260606"]: Still creating... [00m10s elapsed]
+azurerm_storage_account.stg["stg260601"]: Still creating... [00m10s elapsed]
+azurerm_storage_account.stg["stg260604"]: Still creating... [00m10s elapsed]
+azurerm_virtual_network.vnet: Creation complete after 11s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/mj-vnet]
+azurerm_subnet.subnet["app"]: Creating...
+azurerm_subnet.subnet["backend"]: Creating...
+azurerm_subnet.subnet["middleend"]: Creating...
+azurerm_subnet.subnet["db"]: Creating...
+azurerm_subnet.subnet["db"]: Creation complete after 6s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/mj-vnet/subnets/db]
+azurerm_subnet.subnet["web"]: Creating...
+azurerm_storage_account.stg["stg260603"]: Still creating... [00m20s elapsed]
+azurerm_storage_account.stg["stg260602"]: Still creating... [00m20s elapsed]
+azurerm_storage_account.stg["stg260606"]: Still creating... [00m20s elapsed]
+azurerm_storage_account.stg["stg260605"]: Still creating... [00m20s elapsed]
+azurerm_storage_account.stg["stg260604"]: Still creating... [00m20s elapsed]
+azurerm_storage_account.stg["stg260601"]: Still creating... [00m20s elapsed]
+azurerm_subnet.subnet["middleend"]: Still creating... [00m10s elapsed]
+azurerm_subnet.subnet["backend"]: Still creating... [00m10s elapsed]
+azurerm_subnet.subnet["app"]: Still creating... [00m10s elapsed]
+azurerm_subnet.subnet["app"]: Creation complete after 12s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/mj-vnet/subnets/app]
+azurerm_subnet.subnet["frontend"]: Creating...
+azurerm_subnet.subnet["web"]: Still creating... [00m10s elapsed]
+azurerm_subnet.subnet["backend"]: Creation complete after 17s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/mj-vnet/subnets/backend]
+azurerm_subnet.subnet["test"]: Creating...
+azurerm_storage_account.stg["stg260603"]: Still creating... [00m30s elapsed]
+azurerm_storage_account.stg["stg260605"]: Still creating... [00m30s elapsed]
+azurerm_storage_account.stg["stg260606"]: Still creating... [00m30s elapsed]
+azurerm_storage_account.stg["stg260602"]: Still creating... [00m30s elapsed]
+azurerm_storage_account.stg["stg260601"]: Still creating... [00m30s elapsed]
+azurerm_storage_account.stg["stg260604"]: Still creating... [00m30s elapsed]
+azurerm_subnet.subnet["middleend"]: Still creating... [00m20s elapsed]
+azurerm_subnet.subnet["frontend"]: Still creating... [00m10s elapsed]
+azurerm_subnet.subnet["middleend"]: Creation complete after 23s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/mj-vnet/subnets/middleend]
+azurerm_subnet.subnet["web"]: Still creating... [00m20s elapsed]
+azurerm_subnet.subnet["test"]: Still creating... [00m10s elapsed]
+azurerm_subnet.subnet["web"]: Creation complete after 21s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/mj-vnet/subnets/web]
+azurerm_storage_account.stg["stg260603"]: Still creating... [00m40s elapsed]
+azurerm_storage_account.stg["stg260605"]: Still creating... [00m40s elapsed]
+azurerm_storage_account.stg["stg260606"]: Still creating... [00m40s elapsed]
+azurerm_storage_account.stg["stg260602"]: Still creating... [00m40s elapsed]
+azurerm_storage_account.stg["stg260604"]: Still creating... [00m40s elapsed]
+azurerm_storage_account.stg["stg260601"]: Still creating... [00m40s elapsed]
+azurerm_subnet.subnet["frontend"]: Still creating... [00m20s elapsed]
+azurerm_subnet.subnet["frontend"]: Creation complete after 21s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/mj-vnet/subnets/frontend]
+azurerm_subnet.subnet["test"]: Still creating... [00m20s elapsed]
+azurerm_subnet.subnet["test"]: Creation complete after 22s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Network/virtualNetworks/mj-vnet/subnets/test]
+azurerm_storage_account.stg["stg260603"]: Still creating... [00m50s elapsed]
+azurerm_storage_account.stg["stg260602"]: Still creating... [00m50s elapsed]
+azurerm_storage_account.stg["stg260606"]: Still creating... [00m50s elapsed]
+azurerm_storage_account.stg["stg260601"]: Still creating... [00m50s elapsed]
+azurerm_storage_account.stg["stg260604"]: Still creating... [00m50s elapsed]
+azurerm_storage_account.stg["stg260603"]: Still creating... [01m00s elapsed]
+azurerm_storage_account.stg["stg260606"]: Still creating... [01m00s elapsed]
+azurerm_storage_account.stg["stg260602"]: Still creating... [01m00s elapsed]
+azurerm_storage_account.stg["stg260604"]: Still creating... [01m00s elapsed]
+azurerm_storage_account.stg["stg260601"]: Still creating... [01m00s elapsed]
+azurerm_storage_account.stg["stg260604"]: Creation complete after 1m9s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/mjstg260604]
+azurerm_storage_account.stg["stg260602"]: Creation complete after 1m10s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/mjstg260602]
+azurerm_storage_account.stg["stg260603"]: Still creating... [01m10s elapsed]
+azurerm_storage_account.stg["stg260606"]: Still creating... [01m10s elapsed]
+azurerm_storage_account.stg["stg260601"]: Still creating... [01m10s elapsed]
+azurerm_storage_account.stg["stg260606"]: Creation complete after 1m12s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/mjstg260606] 
+azurerm_storage_account.stg["stg260601"]: Creation complete after 1m12s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/mjstg260601] 
+azurerm_storage_account.stg["stg260603"]: Creation complete after 1m13s [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-demo-test/providers/Microsoft.Storage/storageAccounts/mjstg260603] 
+╷
+│ Error: creating Storage Account (Subscription: "4985f681-bfb3-4e92-a131-b1e85dd4f934"
+│ Resource Group Name: "rg-demo-test"
+│ Storage Account Name: "mjstg260605"): polling after Create: internal-error: unimplemented polling status "Unknown"
+│
+│   with azurerm_storage_account.stg["stg260605"],
+│   on main.tf line 9, in resource "azurerm_storage_account" "stg":    
+│    9: resource "azurerm_storage_account" "stg" {
+│
+
+What damage this causes
+
+Important.
+
+Right now:
+
+Azure → resource exists
+Terraform → thinks it failed
+
+So next plan will show:
+
+Create mjstg260605
+
+But Azure will say:
+
+Already exists
+
+Now you get conflict errors.
+
+This is called:
+
+State drift
+
+And this is exactly why state matters.
+
+Why this happens specifically with Storage Accounts
+
+Storage accounts:
+
+slow provisioning
+
+async creation
+
+sometimes weird status transitions
+
+Azure sometimes returns:
+
+"Unknown"
+
+Provider doesn’t know how to interpret → throws error.
+
+This is known with azurerm provider sometimes.
+
+So nothing is wrong with your loops or design.
+
+This is not your Terraform logic.
+
+It’s provider polling.
+
+What damage this causes
+
+Important.
+
+Right now:
+
+Azure → resource exists
+Terraform → thinks it failed
+
+So next plan will show:
+
+Create mjstg260605
+
+But Azure will say:
+
+Already exists
+
+Now you get conflict errors.
+
+This is called:
+
+State drift
+
+And this is exactly why state matters.
+
+What you must do right now
+
+Don’t rerun blindly. That’s rookie behavior.
+
+Fix state first.
+
+Option A (cleanest for lab)
+
+Delete manually:
+
+Portal → delete mjstg260605
+
+Then:
+
+terraform apply
+
+Easy.
+
+Option B (professional way — import)
+
+Tell Terraform:
+
+“this resource already exists, track it”
+
+terraform import azurerm_storage_account.stg["stg260605"] /subscriptions/.../storageAccounts/mjstg260605
+
+
+Then:
+
+terraform plan
+
+Now state and reality match.
+
+Strategic lesson you should take
+
+This is not a bug to ignore.
+
+This is the lesson:
+
+Terraform is eventually consistent.
+
+Apply success/failure is NOT absolute truth.
+
+You must think in:
+
+desired state
+
+actual state
+
+Terraform state
+
+Three separate layers.
+
+Most juniors only think about one.
+
+That’s how outages happen.
+
+Your mental model upgrade
+
+From now on:
+
+If apply fails but portal shows resource:
+
+Ask:
+
+Did Azure fail?
+or
+Did Terraform lose track?
+
+Not the same.
