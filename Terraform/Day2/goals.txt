@@ -10,3 +10,36 @@ If you still think “1 resource = 1 block”, you’re stuck at beginner level.
 Terraform’s entire value = programmatic scale.
 
 If you don’t internalize that today, you’re just writing prettier ARM templates.
+
+This exercise is only for understaing the for_each and count. so every time we can't build each block for separate resources, so we using this method.
+
+
+count vs for_each (clear difference)
+
+count:
+resource[0]
+resource[1]
+
+Index-based
+Order-sensitive
+Breaks easily
+
+
+for_each:
+resource["app"]
+resource["db"]
+
+Key-based
+Stable
+Safe
+Predictable
+
+Use for_each 95% of time.
+
+When to use what
+
+Use list/set:
+When items are simple values (storage names)
+
+Use map:
+When each item has properties (subnets with CIDR)
