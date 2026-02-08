@@ -233,3 +233,146 @@ or
 Did Terraform lose track?
 
 Not the same.
+
+But:
+
+“How does Terraform decide what to touch vs skip?”
+
+That’s the mental model you actually need.
+
+Let’s strip this down with zero fluff.
+
+First — your core assumption
+
+You said:
+
+everything already in state file and it's unmodified so terraform assumes ok it's already in my memory so skip
+
+Yes.
+
+That’s exactly how Terraform works.
+
+But don’t say “memory”.
+
+Say:
+
+state = source of truth for Terraform decisions
+
+Precision matters.
+
+What Terraform actually does during plan/apply
+
+Every run follows this exact algorithm:
+
+Step 1 — Read state
+
+Terraform loads:
+
+terraform.tfstate
+
+This is:
+
+“What I think exists”
+
+Step 2 — Refresh (very important)
+
+Terraform asks Azure:
+
+“Do these resources still exist?”
+
+It updates state with real values.
+
+So it does NOT blindly trust memory.
+
+It verifies reality first.
+
+Step 3 — Compare
+
+Terraform compares:
+
+Desired (your .tf files)
+vs
+Current (state after refresh)
+
+Step 4 — Diff
+
+Then decides:
+
+= no change → skip
+
+missing → create
+~ changed → update
+
+removed → destroy
+
+Your specific run explained
+
+This time you saw:
+
+1 added
+
+That means:
+
+Terraform compared:
+
+State → already has 5 storage + vnet + subnets
+Code → same
+Except one missing storage (because last time state never recorded it)
+
+So:
+
+only 1 create
+
+Everything else = no diff
+
+So Terraform does nothing.
+
+This is called:
+
+idempotency
+
+Same config → same result → no extra work
+
+If Terraform recreated everything every run, it would be unusable.
+
+Brutal clarity
+
+Terraform NEVER recreates resources just because you ran apply.
+
+It only acts on diffs.
+
+No diff → no action.
+
+If you ever see mass recreation without config change → you messed up something (usually count misuse or key change)
+
+What happened in your case
+
+Run 1:
+Storage created in Azure but not recorded
+
+Run 2:
+State missing 1 → Terraform adds 1
+
+Now:
+State and Azure aligned
+
+Future runs:
+0 changes
+
+Exactly correct behavior.
+
+One dangerous misconception to kill now
+
+Do NOT think:
+
+“Terraform skips because it trusts memory”
+
+Wrong framing.
+
+Correct:
+
+“It skips because desired state equals actual state”
+
+Subtle but critical difference.
+
+It always checks.
