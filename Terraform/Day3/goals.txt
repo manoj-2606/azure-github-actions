@@ -1,0 +1,70 @@
+First — Understand the objective (no sugarcoating)
+
+If you miss this, the rest is pointless.
+
+What you’re actually learning
+
+Not Terraform syntax.
+
+You’re learning:
+
+separation of responsibility
+
+boundaries
+
+reusability
+
+contracts between components
+
+maintainable infra
+
+This is software engineering, not “infra scripting”.
+
+If you keep everything in main.tf, you’re basically writing:
+
+a 1,000-line bash script
+
+That’s junior behavior.
+
+Real-world reason (why this matters)
+
+In companies:
+
+You will NOT build:
+
+1 storage account
+
+1 vnet
+
+You will build:
+
+30 environments
+
+20 storage accounts
+
+10 VNets
+
+5 teams reusing same patterns
+
+Without modules you get:
+
+copy paste
+
+drift
+
+bugs
+
+inconsistent naming
+
+nightmare maintenance
+
+Modules = reusable Lego blocks.
+
+One fix → affects everything.
+
+That’s the difference between:
+
+hobbyist Terraform
+vs
+
+production Terraform
