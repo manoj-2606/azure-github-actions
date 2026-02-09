@@ -17,4 +17,14 @@ module "network" {
     web = "10.0.1.0/24"
     db  = "10.0.2.0/24"
   }
+
+  rg_name  = module.rg.rg_name
+  location = var.location
+}
+
+module "storage_app" {
+  source   = "./modules/storage"
+  names    = ["appstg001", "appstg002"]
+  rg_name  = module.rg.rg_name
+  location = var.location
 }
