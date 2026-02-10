@@ -1,0 +1,86 @@
+Now — your bigger question
+“How many days to be Finland-ready?”
+
+Let’s be direct.
+
+Right now you’re at:
+
+~25% of real Terraform skill
+
+You know mechanics, not production usage yet.
+
+To be hireable internationally (Finland-level or any serious market), you need:
+
+Phase 1 — Foundations (done/doing)
+
+Day 1–5 (current)
+
+Phase 2 — Professional Terraform (7–10 days more)
+
+modules advanced patterns
+
+workspaces vs folder strategy
+
+remote backend properly
+
+dynamic blocks
+
+lifecycle rules
+
+importing existing infra
+
+state manipulation
+
+CI/CD with pipelines
+
+linting + formatting
+
+secrets handling
+
+Phase 3 — Real-world project (10–14 days)
+
+Build ONE serious project:
+
+Example:
+
+full VNet architecture
+
+NSGs
+
+VM/AKS
+
+monitoring
+
+backend
+
+pipelines
+
+multi-env
+
+Portfolio-grade.
+
+This is what recruiters care about.
+
+Straight answer
+
+If you work seriously:
+
+2–3 hours daily
+
+hands-on only
+
+You need:
+
+~25–30 total focused days
+
+Not months.
+
+But only if you avoid:
+
+YouTube binge
+
+tutorial hopping
+
+theory addiction
+
+Build or nothing.

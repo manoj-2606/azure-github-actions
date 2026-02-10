@@ -22,3 +22,53 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
+Here’s the blunt truth
+
+When you use a remote backend:
+
+Terraform completely stops trusting your local .tfstate.
+
+Local file becomes:
+
+cache
+
+temp artifact
+
+disposable
+
+The real source of truth becomes:
+
+Azure Blob → dev.tfstate / stage.tfstate
+
+That blob is the database.
+
+Everything else is noise.
+
+What actually happens under the hood
+
+When you run:
+
+terraform plan
+
+
+Terraform does this:
+
+Connect to backend (Azure)
+
+Download remote state
+
+Load into memory
+
+Run plan
+
+Optionally write updated state back
+
+It does NOT:
+
+read your local .tfstate first
+
+fall back to local
+
+merge anything
+
+Local is ignored.
