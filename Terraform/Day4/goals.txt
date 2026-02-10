@@ -1,0 +1,49 @@
+Objective
+
+Move Terraform state from:
+
+your laptop
+
+to:
+
+Azure Storage (single source of truth)
+
+with locking (no concurrent corruption)
+
+with separate environments (dev/stage/prod isolation)
+
+Goal
+
+Multiple engineers can:
+
+plan safely
+
+apply safely
+
+never corrupt state
+
+never destroy wrong environment
+
+Real-world use
+
+Without this:
+
+duplicate infra
+
+state drift
+
+random deletes
+
+2AM outages
+
+you get fired
+
+With this:
+
+safe team workflows
+
+reproducible infra
+
+production-grade Terraform
+
+If you can’t explain what state is and where it lives, you’re guessing. Engineers don’t guess.
