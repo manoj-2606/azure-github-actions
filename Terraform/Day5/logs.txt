@@ -1,0 +1,113 @@
+terraform destroy
+azurerm_resource_group.tfstate: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-tfstate]
+azurerm_storage_account.tfstate: Refreshing state... [id=/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-tfstate/providers/Microsoft.Storage/storageAccounts/stgtfstate2606]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform planned the following actions, but then encountered a problem:
+
+  # azurerm_resource_group.tfstate will be destroyed
+  - resource "azurerm_resource_group" "tfstate" {
+      - id         = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-tfstate" -> null
+      - location   = "centralindia" -> null
+      - name       = "rg-tfstate" -> null
+      - tags       = {} -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # azurerm_storage_account.tfstate will be destroyed
+  - resource "azurerm_storage_account" "tfstate" {
+      - access_tier                        = "Hot" -> null
+      - account_kind                       = "StorageV2" -> null
+      - account_replication_type           = "LRS" -> null
+      - account_tier                       = "Standard" -> null
+      - allow_nested_items_to_be_public    = false -> null
+      - cross_tenant_replication_enabled   = false -> null
+      - default_to_oauth_authentication    = false -> null
+      - dns_endpoint_type                  = "Standard" -> null
+      - https_traffic_only_enabled         = true -> null
+      - id                                 = "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-tfstate/providers/Microsoft.Storage/storageAccounts/stgtfstate2606" -> null
+      - infrastructure_encryption_enabled  = false -> null
+      - is_hns_enabled                     = false -> null
+      - large_file_share_enabled           = false -> null
+      - local_user_enabled                 = true -> null
+      - location                           = "centralindia" -> null
+      - min_tls_version                    = "TLS1_0" -> null
+      - name                               = "stgtfstate2606" -> null
+      - nfsv3_enabled                      = false -> null
+      - primary_access_key                 = (sensitive value) -> null
+      - primary_blob_connection_string     = (sensitive value) -> null
+      - primary_blob_endpoint              = "https://stgtfstate2606.blob.core.windows.net/" -> null
+      - primary_blob_host                  = "stgtfstate2606.blob.core.windows.net" -> null
+      - primary_connection_string          = (sensitive value) -> null
+      - primary_dfs_endpoint               = "https://stgtfstate2606.dfs.core.windows.net/" -> null
+      - primary_dfs_host                   = "stgtfstate2606.dfs.core.windows.net" -> null
+      - primary_file_endpoint              = "https://stgtfstate2606.file.core.windows.net/" -> null
+      - primary_file_host                  = "stgtfstate2606.file.core.windows.net" -> null
+      - primary_location                   = "centralindia" -> null
+      - primary_queue_endpoint             = "https://stgtfstate2606.queue.core.windows.net/" -> null
+      - primary_queue_host                 = "stgtfstate2606.queue.core.windows.net" -> null
+      - primary_table_endpoint             = "https://stgtfstate2606.table.core.windows.net/" -> null
+      - primary_table_host                 = "stgtfstate2606.table.core.windows.net" -> null
+      - primary_web_endpoint               = "https://stgtfstate2606.z29.web.core.windows.net/" -> null
+      - primary_web_host                   = "stgtfstate2606.z29.web.core.windows.net" -> null
+      - public_network_access_enabled      = true -> null
+      - queue_encryption_key_type          = "Service" -> null
+      - resource_group_name                = "rg-tfstate" -> null
+      - secondary_access_key               = (sensitive value) -> null
+      - secondary_connection_string        = (sensitive value) -> null
+      - sftp_enabled                       = false -> null
+      - shared_access_key_enabled          = true -> null
+      - table_encryption_key_type          = "Service" -> null
+      - tags                               = {} -> null
+        # (57 unchanged attributes hidden)
+
+      - blob_properties {
+          - change_feed_enabled           = false -> null
+          - change_feed_retention_in_days = 0 -> null
+          - last_access_time_enabled      = false -> null
+          - versioning_enabled            = false -> null
+            # (1 unchanged attribute hidden)
+        }
+
+      - queue_properties {
+          - hour_metrics {
+              - enabled               = false -> null
+              - include_apis          = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+            }
+          - logging {
+              - delete                = false -> null
+              - read                  = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+              - write                 = false -> null
+            }
+          - minute_metrics {
+              - enabled               = false -> null
+              - include_apis          = false -> null
+              - retention_policy_days = 0 -> null
+              - version               = "1.0" -> null
+            }
+        }
+
+      - share_properties {
+          - retention_policy {
+              - days = 7 -> null
+            }
+        }
+    }
+
+Plan: 0 to add, 0 to change, 2 to destroy.
+╷
+│ Error: Instance cannot be destroyed
+│
+│   on main.tf line 12:
+│   12: resource "azurerm_storage_account" "tfstate" {
+│
+│ Resource azurerm_storage_account.tfstate has lifecycle.prevent_destroy set, but the plan calls for this resource to be destroyed. To avoid this error and continue   
+│ with the plan, either disable lifecycle.prevent_destroy or reduce the scope of the plan using the -target option.
+╵
+PS C:\dev\git\azure-github-actions\Terraform\Day5\envs\shared> 

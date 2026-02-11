@@ -1,0 +1,76 @@
+It’s teaching four survival mechanics:
+
+Environment isolation
+
+Adopting existing infrastructure
+
+Preventing destructive changes
+
+Detecting configuration drift
+Each one corresponds to a real production failure mode.
+PART 1 — Multi-Environment Strategy
+Actual goal: Prevent cross-environment blast radius.
+Risk it addresses: You accidentally apply prod changes while testing dev.
+If dev and prod share state or config, one mistake nukes both.
+That’s not theory. That’s how outages happen.
+Folders vs workspaces:
+Workspaces hide state and encourage “one config controlling everything”. That’s fragile. Humans forget what workspace they’re on. One wrong command → prod.
+Folders are explicit. You see dev/stage/prod physically separated. Separate backends. Separate state files. You must consciously enter prod. That friction is safety.
+Translation: You are trading elegance for predictability. Predictability wins in production.
+If two envs share the same backend key:
+They share state.
+Terraform thinks both are the same environment.
+Apply in one → modifies/destroys the other.
+That’s a silent catastrophe.
+PART 2 — Import existing resources
+Actual goal: Learn brownfield adoption.
+Risk it addresses: Real companies already have infra. You don’t get to recreate it.
+If you only know “terraform apply creates stuff”, you are useless in 80% of jobs.
+terraform import does ONE thing:
+It attaches an existing real-world resource to Terraform state.
+It does NOT create.
+It does NOT change.
+It only says: “this already exists; start managing it”.
+If you don’t understand state manipulation, you’re just a script runner, not an engineer.
+PART 3 — Lifecycle rules
+Actual goal: Add guardrails against irreversible destruction.
+Risk it addresses: Terraform happily deletes and recreates things.
+Storage accounts, DBs, prod data — delete once and it’s gone.
+Terraform doesn’t care.
+lifecycle { prevent_destroy = true }
+means: “if deletion is required, fail instead”.
+Failing is good. Failing is cheap. Data loss is expensive.
+If you don’t use this on critical resources, you’re trusting yourself to never make a mistake. That’s arrogance. Engineers design assuming mistakes will happen.
+PART 4 — Drift
+Actual goal: Teach you that reality diverges from code.
+Risk it addresses: Humans change stuff manually.
+Your code says A.
+Azure is B.
+If you never test drift, you trust plans blindly and get surprised in prod.
+terraform plan should scream when drift exists.
+If it doesn’t, you’re flying blind.
+Drift detection is your early warning system.
+Now the uncomfortable truth
+Right now, if you only know:
+write tf
+apply
+destroy
+You’re still a beginner.
+Day 6 is where you stop being a tutorial follower and start acting like someone responsible for systems that matter.
+This is about paranoia and defensive engineering.
+Not features.
+Not syntax.
+Safety.
+Here’s the prioritized plan (no excuses version)
+
+Create fully isolated folders with separate backend keys. Verify destroying dev cannot touch stage/prod.
+
+Practice import until you can do it without docs. If you can’t import, you can’t work on legacy systems.
+
+Add prevent_destroy to every critical resource by default. Treat deletion as a failure state.
+
+Intentionally create drift and confirm plan catches it. If plan surprises you, you don’t understand state yet.
+If you skip any of these because they feel “boring”, you’re optimizing for fun instead of reliability. That’s how people stay junior.
+Bottom line
+Day 6 is not about Terraform.
+It’s about learning how not to be the person who deletes production at 2AM.
