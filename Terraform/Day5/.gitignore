@@ -6,3 +6,5 @@ crash.log
 
 # variables if sensitive
 terraform.tfvars
+
+LICENSE.txt
