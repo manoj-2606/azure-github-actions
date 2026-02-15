@@ -46,3 +46,25 @@ Break shared infra
 Create naming chaos
 
 Fail design interviews
+
+🧠 What You Just Learned (If You Actually Did It)
+
+You now understand:
+
+resource vs data
+
+Remote backend
+
+Conditional creation
+
+Count logic
+
+Environment-driven infra
+
+Naming via locals
+
+Composition
+
+This is real infrastructure design.
+
+Not “copy from YouTube”.
