@@ -1,0 +1,59 @@
+#################################################
+# Terraform
+#################################################
+
+# Terraform working directory
+**/.terraform/*
+
+# State files
+*.tfstate
+*.tfstate.*
+*.backup
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Sensitive variable files
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Plans
+*.tfplan
+plan.out
+
+# CLI config
+.terraformrc
+terraform.rc
+
+#################################################
+# Providers / binaries (critical)
+#################################################
+
+*.exe
+*.dll
+*.so
+*.dylib
+*.zip
+
+#################################################
+# OS noise
+#################################################
+
+.DS_Store
+Thumbs.db
+
+#################################################
+# IDE junk
+#################################################
+
+.vscode/
+.idea/
+
+#################################################
+# Logs
+#################################################
+
+*.log
