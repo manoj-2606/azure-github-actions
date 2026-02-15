@@ -11,3 +11,8 @@ data "azurerm_storage_account" "tfstate_sa" {
   name                = "stgtfstate2606"
   resource_group_name = "rg-tfstate"
 }
+
+resource "azurerm_resource_group" "demo" {
+  name     = "rg-demo-test"
+  location = "centralindia"
+}
