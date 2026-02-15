@@ -68,3 +68,18 @@ Composition
 This is real infrastructure design.
 
 Not “copy from YouTube”.
+
+
+What you must answer when you come back
+
+resource vs data — exact difference?
+
+When should you use data?
+
+How to conditionally create a resource?
+
+Why dynamic blocks exist?
+
+Why locals reduce duplication?
+
+If you hesitate → repeat.
