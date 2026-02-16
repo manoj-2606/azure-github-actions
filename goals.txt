@@ -1,0 +1,29 @@
+Objective — What You’re Actually Building
+
+You are building:
+
+A controlled Infrastructure delivery pipeline
+
+Where:
+
+Engineer → PR → Plan → Review → Approval → Apply → Audit
+
+No direct apply.
+No cowboy pushes.
+No accidental production destruction.
+
+Real-World Purpose
+
+In real companies:
+
+Terraform runs from pipelines
+
+State is remote (never local)
+
+PR validation prevents outages
+
+Manual approval protects production
+
+Audit trail proves compliance
+
+If you can explain and implement this, you are employable.
