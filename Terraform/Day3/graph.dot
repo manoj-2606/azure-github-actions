@@ -1,0 +1,23 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  subgraph "cluster_module.network" {
+    label = "module.network"
+    fontname = "sans-serif"
+    "module.network.azurerm_subnet.subnet" [label="azurerm_subnet.subnet"];
+    "module.network.azurerm_virtual_network.vnet" [label="azurerm_virtual_network.vnet"];
+  }
+  subgraph "cluster_module.rg" {
+    label = "module.rg"
+    fontname = "sans-serif"
+    "module.rg.azurerm_resource_group.rg" [label="azurerm_resource_group.rg"];
+  }
+  subgraph "cluster_module.storage_app" {
+    label = "module.storage_app"
+    fontname = "sans-serif"
+    "module.storage_app.azurerm_storage_account.sa" [label="azurerm_storage_account.sa"];
+  }
+  "module.network.azurerm_subnet.subnet" -> "module.network.azurerm_virtual_network.vnet";
+  "module.network.azurerm_virtual_network.vnet" -> "module.rg.azurerm_resource_group.rg";
+  "module.storage_app.azurerm_storage_account.sa" -> "module.rg.azurerm_resource_group.rg";
+}
