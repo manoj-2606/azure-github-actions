@@ -1,0 +1,41 @@
+az login
+→ Authenticate to Azure
+
+az group create --name rg-tfstate --location "Central India"
+→ Create resource group for storing Terraform state
+
+az storage account create --name stgtfstate2606 --resource-group rg-tfstate --location "Central India" --sku Standard_LRS
+→ Create storage account for remote state
+
+az storage container create --name tfstate --account-name stgtfstate2606 --auth-mode login
+→ Create blob container to store .tfstate
+
+mkdir terraform-day8
+→ Create fresh Terraform project folder
+
+git init
+→ Initialize local Git repository
+
+terraform init
+→ Initialize Terraform and configure backend
+
+terraform fmt -recursive
+→ Format Terraform files
+
+terraform validate
+→ Validate Terraform configuration
+
+terraform plan
+→ Preview infrastructure changes
+
+git add .
+→ Stage files
+
+git commit -m "Initial commit"
+→ Commit code
+
+git branch -M main
+→ Rename branch to main
+
+git push -u origin main
+→ Push code to remote repository
