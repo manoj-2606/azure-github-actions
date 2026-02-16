@@ -27,3 +27,234 @@ Manual approval protects production
 Audit trail proves compliance
 
 If you can explain and implement this, you are employable.
+
+🧪 Exercise 1 — Break Required Argument (Validation Must Fail)
+🎯 Goal
+
+Your Validate stage must fail before plan runs.
+
+If it doesn’t, your pipeline is weak.
+
+Step 1 — Create a Feature Branch
+
+Never break main.
+
+git checkout -b feature/break-location
+
+Step 2 — Remove location from main.tf
+
+Change this:
+
+resource "azurerm_resource_group" "demo" {
+  name     = "rg-demo-test"
+  location = "Central India"
+}
+
+
+To this:
+
+resource "azurerm_resource_group" "demo" {
+  name = "rg-demo-test"
+}
+
+
+Save.
+
+Step 3 — Test Locally (Optional but Smart)
+
+Run:
+
+terraform validate
+
+
+You should see something like:
+
+The argument "location" is required, but no definition was found.
+
+
+If you don’t see failure locally, your provider config is broken.
+
+Step 4 — Commit and Push
+git add .
+git commit -m "Test: remove location to break validation"
+git push origin feature/break-location
+
+Step 5 — Create PR
+
+Open PR → target main.
+
+Expected Result:
+
+Validate stage fails
+
+Plan stage does NOT run
+
+If plan runs → your pipeline dependencies are wrong.
+
+If everything passes → your validate stage is incomplete.
+
+Fix pipeline before moving forward.
+
+🧪 Exercise 2 — Add Tag (Must Be In-Place Update)
+
+Now we test lifecycle understanding.
+
+Step 1 — Create New Branch
+git checkout main
+git pull
+git checkout -b feature/add-tag
+
+Step 2 — Modify Resource
+
+Add tags:
+
+resource "azurerm_resource_group" "demo" {
+  name     = "rg-demo-test"
+  location = "Central India"
+
+  tags = {
+    env = "dev"
+  }
+}
+
+Step 3 — Local Plan
+
+Run:
+
+terraform plan
+
+Expected Output:
+~ update in-place
+
+
+You should see:
+
+~ tags = {
+    + "env" = "dev"
+  }
+
+
+NOT:
+
+-/+ resource will be destroyed and recreated
+
+
+If it wants to recreate:
+
+You changed name accidentally
+
+You changed location
+
+You changed provider config
+
+Fix it.
+
+Step 4 — Push PR
+git add .
+git commit -m "Add tag to RG"
+git push origin feature/add-tag
+
+
+Review PR plan output.
+
+If it shows destroy/create, stop and understand why.
+
+🧪 Exercise 3 — Change Resource Group Name (Controlled Destruction Detection)
+
+Now we simulate a dangerous change.
+
+Step 1 — New Branch
+git checkout main
+git pull
+git checkout -b feature/change-rg-name
+
+Step 2 — Change Name
+
+From:
+
+name = "rg-demo-test"
+
+
+To:
+
+name = "rg-demo-prod"
+
+Step 3 — Run Plan
+terraform plan
+
+Expected Output:
+-/+ destroy and create replacement
+
+
+Terraform must show:
+
+destroy rg-demo-test
+
+create rg-demo-prod
+
+This is correct behavior.
+
+Azure does not allow renaming resource groups.
+
+If plan shows only update → something is wrong.
+
+What You Just Learned
+
+Changing immutable attributes = destruction.
+
+This is exactly what PR plan review is meant to catch.
+
+In real production, this would wipe everything inside the RG.
+
+🧪 Exercise 4 — Protect Main Branch (This Is Governance)
+
+This is not Terraform. This is DevOps maturity.
+
+Step 1 — Go to Azure DevOps
+
+Repos → Branches → main → Branch policies.
+
+Step 2 — Enable:
+
+✅ Require minimum reviewers (at least 1)
+
+✅ Check for linked work items (optional but good)
+
+✅ Require successful build validation
+
+✅ Reset code reviewer votes when new changes pushed
+
+✅ Block direct pushes
+
+Most important:
+Disable “Allow direct pushes”.
+
+Step 3 — Test It
+
+Try:
+
+git checkout main
+echo "test" >> test.txt
+git add .
+git commit -m "test direct push"
+git push origin main
+
+
+It must fail.
+
+If it succeeds:
+
+Your governance is fake.
+
+What You Should See After All 4
+Exercise	Expected Outcome
+Break location	Validate stage fails
+Add tag	In-place update
+Change name	Destroy/Create
+Protect main	Direct push blocked
+
+If any of these don’t behave exactly as expected:
+
+Don’t move forward.
+
+Investigate why.
