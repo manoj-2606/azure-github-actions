@@ -2,7 +2,7 @@ You should be thinking like:
 
 “what system behavior am I designing?”
 
-Day 3 is not about syntax.
+Day 2 is not about syntax.
 It’s about stopping manual infrastructure thinking.
 
 If you still think “1 resource = 1 block”, you’re stuck at beginner level.
