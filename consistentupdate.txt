@@ -1,0 +1,7 @@
+Here are some practical ways to keep your GitHub profile consistently active:
+Small but meaningful contributions
+
+Fix typos or improve documentation in your own or open-source repos — even a one-line README update counts as a commit
+Add comments to your code explaining what things do
+Refactor small pieces of code (rename variables, clean up functions)
+Add .gitignore, LICENSE, or CONTRIBUTING.md files to existing projects
