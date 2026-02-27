@@ -5,3 +5,9 @@ Fix typos or improve documentation in your own or open-source repos — even a o
 Add comments to your code explaining what things do
 Refactor small pieces of code (rename variables, clean up functions)
 Add .gitignore, LICENSE, or CONTRIBUTING.md files to existing projects
+
+Build a habit around learning
+
+Create a "Today I Learned" (TIL) repo where you push a small markdown note every day about something you learned
+Keep a "coding journal" repo — just daily notes, ideas, or observations in markdown files
+Solve one LeetCode/HackerRank problem daily and push your solution to a dedicated repo
