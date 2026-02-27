@@ -11,3 +11,14 @@ Build a habit around learning
 Create a "Today I Learned" (TIL) repo where you push a small markdown note every day about something you learned
 Keep a "coding journal" repo — just daily notes, ideas, or observations in markdown files
 Solve one LeetCode/HackerRank problem daily and push your solution to a dedicated repo
+
+Consistent mini-projects
+
+Pick a small side project and break it into tiny daily tasks (update a config, add one feature, write one test)
+Automate something small in your life with a script and push it
+Build a personal website and keep tweaking it
+
+Open source participation
+
+Review issues on open source projects and leave comments (doesn't show on your graph, but builds reputation)
+Submit small PRs — even documentation fixes count and are often welcomed
