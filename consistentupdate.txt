@@ -22,3 +22,9 @@ Open source participation
 
 Review issues on open source projects and leave comments (doesn't show on your graph, but builds reputation)
 Submit small PRs — even documentation fixes count and are often welcomed
+
+The realistic approach
+Honestly, the most sustainable method is the TIL repo combined with one small daily task on a side project. 
+It takes 10–15 minutes, the commits are genuine, and over time you actually accumulate useful notes and projects.
+One thing worth keeping in mind — GitHub's contribution graph counts commits to the default branch (or any branch if you set it that way in settings), 
+so make sure you're pushing to the right branch. And avoid just making empty commits to game the graph; it's obvious to anyone who looks and doesn't help your actual skills.
