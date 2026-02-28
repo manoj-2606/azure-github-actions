@@ -1,7 +1,10 @@
 # ============================================================
 # Day 8 — CI/CD for Terraform (Azure DevOps)
 # Pipeline: Validate → Plan (PR) → Manual Approval → Apply (main)
-# FIX: Stage 3 & 4 conditions updated to handle Skipped Plan stage
+# FIXES:
+#   1. workingDirectory corrected to match actual repo structure
+#   2. tfplan artifact path fixed so Apply can find it
+#   3. Stage 3 & 4 conditions handle Skipped Plan correctly
 # ============================================================
 
 trigger:
@@ -16,16 +19,15 @@ pr:
 
 variables:
   terraformVersion: "1.6.0"
-  workingDirectory: "environments/dev"
+  workingDirectory: "Terraform/Day8" # ← FIXED: matches your actual repo folder
   serviceConnection: "azure-service-connection"
   backendResourceGroup: "rg-tfstate"
   backendStorageAccount: "stgtfstate2606"
   backendContainer: "tfstate"
-  backendKey: "dev.terraform.tfstate"
+  backendKey: "rg-demo-test.tfstate" # ← matches your backend.tf
 
 # ============================================================
 # STAGE 1 — VALIDATE
-# Runs on both PR and main push
 # ============================================================
 stages:
   - stage: Validate
@@ -81,7 +83,6 @@ stages:
 
   # ============================================================
   # STAGE 2 — PLAN (PR ONLY)
-  # Only runs when triggered by a Pull Request
   # ============================================================
   - stage: Plan
     displayName: "2 - Terraform Plan (PR Only)"
@@ -138,6 +139,7 @@ stages:
                 terraform show -no-color tfplan > tfplan.txt
                 echo "Plan complete. tfplan.txt generated for reviewers."
 
+          # FIXED: Publish entire workingDirectory so tfplan binary is included
           - task: PublishBuildArtifacts@1
             displayName: "Publish Plan Artifact"
             inputs:
@@ -147,8 +149,6 @@ stages:
 
   # ============================================================
   # STAGE 3 — MANUAL APPROVAL
-  # FIX: condition accepts Plan as Succeeded OR Skipped
-  #      Plan is Skipped on main push (not PR) — that is expected
   # ============================================================
   - stage: WaitForApproval
     displayName: "3 - Manual Approval Gate"
@@ -173,7 +173,6 @@ stages:
 
   # ============================================================
   # STAGE 4 — APPLY (MAIN BRANCH ONLY, AFTER APPROVAL)
-  # FIX: condition accepts WaitForApproval as Succeeded OR Skipped
   # ============================================================
   - stage: Apply
     displayName: "4 - Terraform Apply (Main Only)"
@@ -196,13 +195,22 @@ stages:
               terraform version
             displayName: "Install Terraform $(terraformVersion)"
 
+          # FIXED: Download artifact and place it correctly
+          - task: DownloadBuildArtifacts@1
+            displayName: "Download Plan Artifact"
+            inputs:
+              buildType: "current"
+              artifactName: "terraform-plan"
+              downloadPath: "$(System.DefaultWorkingDirectory)"
+
           - task: AzureCLI@2
             displayName: "terraform init"
             inputs:
               azureSubscription: $(serviceConnection)
               scriptType: bash
               scriptLocation: inlineScript
-              workingDirectory: $(workingDirectory)
+              # FIXED: workingDirectory points to downloaded artifact location
+              workingDirectory: "$(System.DefaultWorkingDirectory)/terraform-plan"
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_CLIENT_ID=$servicePrincipalId
@@ -222,7 +230,8 @@ stages:
               azureSubscription: $(serviceConnection)
               scriptType: bash
               scriptLocation: inlineScript
-              workingDirectory: $(workingDirectory)
+              # FIXED: same corrected path — tfplan file lives here
+              workingDirectory: "$(System.DefaultWorkingDirectory)/terraform-plan"
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_CLIENT_ID=$servicePrincipalId
