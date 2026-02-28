@@ -1,8 +1,7 @@
 # ============================================================
 # Day 8 — CI/CD for Terraform (Azure DevOps)
 # Pipeline: Validate → Plan (PR) → Manual Approval → Apply (main)
-# FIX: Uses AzureCLI@2 + Bash@3 instead of marketplace Terraform tasks
-#      This resolves schema validation errors in VS Code
+# AUTH: OIDC / Workload Identity Federation (no secrets)
 # ============================================================
 
 trigger:
@@ -26,7 +25,6 @@ variables:
 
 # ============================================================
 # STAGE 1 — VALIDATE
-# Runs on both PR and main push
 # ============================================================
 stages:
   - stage: Validate
@@ -37,7 +35,6 @@ stages:
         pool:
           vmImage: "ubuntu-latest"
         steps:
-          # Install Terraform using plain bash — no marketplace extension needed
           - bash: |
               wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
               unzip -q terraform_$(terraformVersion)_linux_amd64.zip
@@ -45,7 +42,6 @@ stages:
               terraform version
             displayName: "Install Terraform $(terraformVersion)"
 
-          # terraform init uses AzureCLI@2 so it has Azure credentials
           - task: AzureCLI@2
             displayName: "terraform init"
             inputs:
@@ -55,17 +51,19 @@ stages:
               workingDirectory: $(workingDirectory)
               addSpnToEnvironment: true
               inlineScript: |
+                # OIDC — no client secret, uses federated token
                 export ARM_CLIENT_ID=$servicePrincipalId
-                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_OIDC_TOKEN=$idToken         # ✅ OIDC token (replaces ARM_CLIENT_SECRET)
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                export ARM_USE_OIDC=true               # ✅ tells Terraform to use OIDC auth
+
                 terraform init \
                   -backend-config="resource_group_name=$(backendResourceGroup)" \
                   -backend-config="storage_account_name=$(backendStorageAccount)" \
                   -backend-config="container_name=$(backendContainer)" \
                   -backend-config="key=$(backendKey)"
 
-          # terraform fmt -check — pipeline fails if files are not formatted
           - bash: |
               echo "Running terraform fmt check..."
               terraform fmt -check -recursive
@@ -77,7 +75,6 @@ stages:
             displayName: "terraform fmt -check"
             workingDirectory: $(workingDirectory)
 
-          # terraform validate — offline syntax and logic check
           - bash: |
               terraform validate
             displayName: "terraform validate"
@@ -85,7 +82,6 @@ stages:
 
   # ============================================================
   # STAGE 2 — PLAN (PR ONLY)
-  # Runs plan, saves output, publishes as artifact for reviewers
   # ============================================================
   - stage: Plan
     displayName: "2 - Terraform Plan (PR Only)"
@@ -114,9 +110,11 @@ stages:
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_CLIENT_ID=$servicePrincipalId
-                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_OIDC_TOKEN=$idToken
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                export ARM_USE_OIDC=true
+
                 terraform init \
                   -backend-config="resource_group_name=$(backendResourceGroup)" \
                   -backend-config="storage_account_name=$(backendStorageAccount)" \
@@ -133,14 +131,15 @@ stages:
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_CLIENT_ID=$servicePrincipalId
-                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_OIDC_TOKEN=$idToken
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                export ARM_USE_OIDC=true
+
                 terraform plan -out=tfplan
                 terraform show -no-color tfplan > tfplan.txt
                 echo "Plan complete. tfplan.txt generated for reviewers."
 
-          # Publish plan files as artifact so reviewers can read them
           - task: PublishBuildArtifacts@1
             displayName: "Publish Plan Artifact"
             inputs:
@@ -150,8 +149,6 @@ stages:
 
   # ============================================================
   # STAGE 3 — MANUAL APPROVAL GATE
-  # No approval = No apply. Non-negotiable.
-  # Create "production-approval" in ADO → Pipelines → Environments
   # ============================================================
   - stage: WaitForApproval
     displayName: "3 - Manual Approval Gate"
@@ -172,7 +169,6 @@ stages:
 
   # ============================================================
   # STAGE 4 — APPLY (MAIN BRANCH ONLY, AFTER APPROVAL)
-  # Downloads artifact, re-inits, applies the saved plan
   # ============================================================
   - stage: Apply
     displayName: "4 - Terraform Apply (Main Only)"
@@ -207,9 +203,11 @@ stages:
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_CLIENT_ID=$servicePrincipalId
-                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_OIDC_TOKEN=$idToken
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                export ARM_USE_OIDC=true
+
                 terraform init \
                   -backend-config="resource_group_name=$(backendResourceGroup)" \
                   -backend-config="storage_account_name=$(backendStorageAccount)" \
@@ -226,7 +224,9 @@ stages:
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_CLIENT_ID=$servicePrincipalId
-                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_OIDC_TOKEN=$idToken
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                export ARM_USE_OIDC=true
+
                 terraform apply -auto-approve tfplan
