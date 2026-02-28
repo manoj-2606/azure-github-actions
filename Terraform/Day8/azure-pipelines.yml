@@ -1,10 +1,8 @@
 # ============================================================
 # Day 8 — CI/CD for Terraform (Azure DevOps)
 # Pipeline: Validate → Plan (PR) → Manual Approval → Apply (main)
-# FIXES:
-#   1. workingDirectory corrected to match actual repo structure
-#   2. tfplan artifact path fixed so Apply can find it
-#   3. Stage 3 & 4 conditions handle Skipped Plan correctly
+# FIX: Stage 4 no longer downloads artifact from PR run
+#      Instead re-runs plan + applies directly on main
 # ============================================================
 
 trigger:
@@ -19,15 +17,16 @@ pr:
 
 variables:
   terraformVersion: "1.6.0"
-  workingDirectory: "Terraform/Day8" # ← FIXED: matches your actual repo folder
+  workingDirectory: "Terraform/Day8"
   serviceConnection: "azure-service-connection"
   backendResourceGroup: "rg-tfstate"
   backendStorageAccount: "stgtfstate2606"
   backendContainer: "tfstate"
-  backendKey: "rg-demo-test.tfstate" # ← matches your backend.tf
+  backendKey: "rg-demo-test.tfstate"
 
 # ============================================================
 # STAGE 1 — VALIDATE
+# Runs on both PR and main push
 # ============================================================
 stages:
   - stage: Validate
@@ -83,6 +82,7 @@ stages:
 
   # ============================================================
   # STAGE 2 — PLAN (PR ONLY)
+  # Publishes artifact so reviewers can read what will change
   # ============================================================
   - stage: Plan
     displayName: "2 - Terraform Plan (PR Only)"
@@ -137,18 +137,17 @@ stages:
                 export ARM_USE_OIDC=true
                 terraform plan -out=tfplan
                 terraform show -no-color tfplan > tfplan.txt
-                echo "Plan complete. tfplan.txt generated for reviewers."
+                echo "Plan complete. Reviewers can read tfplan.txt in the artifact."
 
-          # FIXED: Publish entire workingDirectory so tfplan binary is included
           - task: PublishBuildArtifacts@1
-            displayName: "Publish Plan Artifact"
+            displayName: "Publish Plan Artifact (for reviewer reference)"
             inputs:
               PathtoPublish: "$(workingDirectory)"
               ArtifactName: "terraform-plan"
               publishLocation: "Container"
 
   # ============================================================
-  # STAGE 3 — MANUAL APPROVAL
+  # STAGE 3 — MANUAL APPROVAL GATE
   # ============================================================
   - stage: WaitForApproval
     displayName: "3 - Manual Approval Gate"
@@ -173,6 +172,9 @@ stages:
 
   # ============================================================
   # STAGE 4 — APPLY (MAIN BRANCH ONLY, AFTER APPROVAL)
+  # FIX: No artifact download — re-runs init + plan + apply
+  #      directly from source code on the main branch agent
+  #      This avoids the cross-run artifact not found error
   # ============================================================
   - stage: Apply
     displayName: "4 - Terraform Apply (Main Only)"
@@ -195,22 +197,13 @@ stages:
               terraform version
             displayName: "Install Terraform $(terraformVersion)"
 
-          # FIXED: Download artifact and place it correctly
-          - task: DownloadBuildArtifacts@1
-            displayName: "Download Plan Artifact"
-            inputs:
-              buildType: "current"
-              artifactName: "terraform-plan"
-              downloadPath: "$(System.DefaultWorkingDirectory)"
-
           - task: AzureCLI@2
             displayName: "terraform init"
             inputs:
               azureSubscription: $(serviceConnection)
               scriptType: bash
               scriptLocation: inlineScript
-              # FIXED: workingDirectory points to downloaded artifact location
-              workingDirectory: "$(System.DefaultWorkingDirectory)/terraform-plan"
+              workingDirectory: $(workingDirectory)
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_CLIENT_ID=$servicePrincipalId
@@ -224,14 +217,15 @@ stages:
                   -backend-config="container_name=$(backendContainer)" \
                   -backend-config="key=$(backendKey)"
 
+          # Re-plan on main then immediately apply
+          # This is the correct approach — no stale artifact from a different run
           - task: AzureCLI@2
-            displayName: "terraform apply"
+            displayName: "terraform plan + apply"
             inputs:
               azureSubscription: $(serviceConnection)
               scriptType: bash
               scriptLocation: inlineScript
-              # FIXED: same corrected path — tfplan file lives here
-              workingDirectory: "$(System.DefaultWorkingDirectory)/terraform-plan"
+              workingDirectory: $(workingDirectory)
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_CLIENT_ID=$servicePrincipalId
@@ -239,4 +233,5 @@ stages:
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
                 export ARM_USE_OIDC=true
+                terraform plan -out=tfplan
                 terraform apply -auto-approve tfplan
