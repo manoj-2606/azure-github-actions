@@ -1,7 +1,7 @@
 # ============================================================
 # Day 8 — CI/CD for Terraform (Azure DevOps)
 # Pipeline: Validate → Plan (PR) → Manual Approval → Apply (main)
-# AUTH: OIDC / Workload Identity Federation (no secrets)
+# FIX: Stage 3 & 4 conditions updated to handle Skipped Plan stage
 # ============================================================
 
 trigger:
@@ -25,6 +25,7 @@ variables:
 
 # ============================================================
 # STAGE 1 — VALIDATE
+# Runs on both PR and main push
 # ============================================================
 stages:
   - stage: Validate
@@ -51,13 +52,11 @@ stages:
               workingDirectory: $(workingDirectory)
               addSpnToEnvironment: true
               inlineScript: |
-                # OIDC — no client secret, uses federated token
                 export ARM_CLIENT_ID=$servicePrincipalId
-                export ARM_OIDC_TOKEN=$idToken         # ✅ OIDC token (replaces ARM_CLIENT_SECRET)
+                export ARM_OIDC_TOKEN=$idToken
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-                export ARM_USE_OIDC=true               # ✅ tells Terraform to use OIDC auth
-
+                export ARM_USE_OIDC=true
                 terraform init \
                   -backend-config="resource_group_name=$(backendResourceGroup)" \
                   -backend-config="storage_account_name=$(backendStorageAccount)" \
@@ -82,6 +81,7 @@ stages:
 
   # ============================================================
   # STAGE 2 — PLAN (PR ONLY)
+  # Only runs when triggered by a Pull Request
   # ============================================================
   - stage: Plan
     displayName: "2 - Terraform Plan (PR Only)"
@@ -114,7 +114,6 @@ stages:
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
                 export ARM_USE_OIDC=true
-
                 terraform init \
                   -backend-config="resource_group_name=$(backendResourceGroup)" \
                   -backend-config="storage_account_name=$(backendStorageAccount)" \
@@ -135,7 +134,6 @@ stages:
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
                 export ARM_USE_OIDC=true
-
                 terraform plan -out=tfplan
                 terraform show -no-color tfplan > tfplan.txt
                 echo "Plan complete. tfplan.txt generated for reviewers."
@@ -148,12 +146,18 @@ stages:
               publishLocation: "Container"
 
   # ============================================================
-  # STAGE 3 — MANUAL APPROVAL GATE
+  # STAGE 3 — MANUAL APPROVAL
+  # FIX: condition accepts Plan as Succeeded OR Skipped
+  #      Plan is Skipped on main push (not PR) — that is expected
   # ============================================================
   - stage: WaitForApproval
     displayName: "3 - Manual Approval Gate"
     dependsOn: Plan
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    condition: |
+      and(
+        in(dependencies.Plan.result, 'Succeeded', 'Skipped'),
+        eq(variables['Build.SourceBranch'], 'refs/heads/main')
+      )
     jobs:
       - deployment: ApprovalGate
         displayName: "Waiting for Manual Approval"
@@ -169,11 +173,16 @@ stages:
 
   # ============================================================
   # STAGE 4 — APPLY (MAIN BRANCH ONLY, AFTER APPROVAL)
+  # FIX: condition accepts WaitForApproval as Succeeded OR Skipped
   # ============================================================
   - stage: Apply
     displayName: "4 - Terraform Apply (Main Only)"
     dependsOn: WaitForApproval
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    condition: |
+      and(
+        in(dependencies.WaitForApproval.result, 'Succeeded', 'Skipped'),
+        eq(variables['Build.SourceBranch'], 'refs/heads/main')
+      )
     jobs:
       - job: ApplyTerraform
         displayName: "Terraform Apply"
@@ -186,12 +195,6 @@ stages:
               sudo mv terraform /usr/local/bin/
               terraform version
             displayName: "Install Terraform $(terraformVersion)"
-
-          - task: DownloadBuildArtifacts@1
-            displayName: "Download Plan Artifact"
-            inputs:
-              artifactName: "terraform-plan"
-              downloadPath: "$(System.DefaultWorkingDirectory)/environments/dev"
 
           - task: AzureCLI@2
             displayName: "terraform init"
@@ -207,7 +210,6 @@ stages:
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
                 export ARM_USE_OIDC=true
-
                 terraform init \
                   -backend-config="resource_group_name=$(backendResourceGroup)" \
                   -backend-config="storage_account_name=$(backendStorageAccount)" \
@@ -228,5 +230,4 @@ stages:
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
                 export ARM_USE_OIDC=true
-
                 terraform apply -auto-approve tfplan
