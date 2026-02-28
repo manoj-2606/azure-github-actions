@@ -1,0 +1,232 @@
+# ============================================================
+# Day 8 — CI/CD for Terraform (Azure DevOps)
+# Pipeline: Validate → Plan (PR) → Manual Approval → Apply (main)
+# FIX: Uses AzureCLI@2 + Bash@3 instead of marketplace Terraform tasks
+#      This resolves schema validation errors in VS Code
+# ============================================================
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  terraformVersion: "1.6.0"
+  workingDirectory: "environments/dev"
+  serviceConnection: "azure-service-connection"
+  backendResourceGroup: "rg-tfstate"
+  backendStorageAccount: "stgtfstate2606"
+  backendContainer: "tfstate"
+  backendKey: "dev.terraform.tfstate"
+
+# ============================================================
+# STAGE 1 — VALIDATE
+# Runs on both PR and main push
+# ============================================================
+stages:
+  - stage: Validate
+    displayName: "1 - Validate & Format Check"
+    jobs:
+      - job: ValidateTerraform
+        displayName: "Terraform Validate"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          # Install Terraform using plain bash — no marketplace extension needed
+          - bash: |
+              wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+              unzip -q terraform_$(terraformVersion)_linux_amd64.zip
+              sudo mv terraform /usr/local/bin/
+              terraform version
+            displayName: "Install Terraform $(terraformVersion)"
+
+          # terraform init uses AzureCLI@2 so it has Azure credentials
+          - task: AzureCLI@2
+            displayName: "terraform init"
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(workingDirectory)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                terraform init \
+                  -backend-config="resource_group_name=$(backendResourceGroup)" \
+                  -backend-config="storage_account_name=$(backendStorageAccount)" \
+                  -backend-config="container_name=$(backendContainer)" \
+                  -backend-config="key=$(backendKey)"
+
+          # terraform fmt -check — pipeline fails if files are not formatted
+          - bash: |
+              echo "Running terraform fmt check..."
+              terraform fmt -check -recursive
+              if [ $? -ne 0 ]; then
+                echo "##vso[task.logissue type=error]Formatting issues found. Run: terraform fmt -recursive"
+                exit 1
+              fi
+              echo "Format check passed!"
+            displayName: "terraform fmt -check"
+            workingDirectory: $(workingDirectory)
+
+          # terraform validate — offline syntax and logic check
+          - bash: |
+              terraform validate
+            displayName: "terraform validate"
+            workingDirectory: $(workingDirectory)
+
+  # ============================================================
+  # STAGE 2 — PLAN (PR ONLY)
+  # Runs plan, saves output, publishes as artifact for reviewers
+  # ============================================================
+  - stage: Plan
+    displayName: "2 - Terraform Plan (PR Only)"
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - job: PlanTerraform
+        displayName: "Terraform Plan"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - bash: |
+              wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+              unzip -q terraform_$(terraformVersion)_linux_amd64.zip
+              sudo mv terraform /usr/local/bin/
+              terraform version
+            displayName: "Install Terraform $(terraformVersion)"
+
+          - task: AzureCLI@2
+            displayName: "terraform init"
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(workingDirectory)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                terraform init \
+                  -backend-config="resource_group_name=$(backendResourceGroup)" \
+                  -backend-config="storage_account_name=$(backendStorageAccount)" \
+                  -backend-config="container_name=$(backendContainer)" \
+                  -backend-config="key=$(backendKey)"
+
+          - task: AzureCLI@2
+            displayName: "terraform plan"
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(workingDirectory)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                terraform plan -out=tfplan
+                terraform show -no-color tfplan > tfplan.txt
+                echo "Plan complete. tfplan.txt generated for reviewers."
+
+          # Publish plan files as artifact so reviewers can read them
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish Plan Artifact"
+            inputs:
+              PathtoPublish: "$(workingDirectory)"
+              ArtifactName: "terraform-plan"
+              publishLocation: "Container"
+
+  # ============================================================
+  # STAGE 3 — MANUAL APPROVAL GATE
+  # No approval = No apply. Non-negotiable.
+  # Create "production-approval" in ADO → Pipelines → Environments
+  # ============================================================
+  - stage: WaitForApproval
+    displayName: "3 - Manual Approval Gate"
+    dependsOn: Plan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: ApprovalGate
+        displayName: "Waiting for Manual Approval"
+        environment: "production-approval"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - bash: echo "Approval received. Proceeding to Apply..."
+                  displayName: "Approval Confirmed"
+
+  # ============================================================
+  # STAGE 4 — APPLY (MAIN BRANCH ONLY, AFTER APPROVAL)
+  # Downloads artifact, re-inits, applies the saved plan
+  # ============================================================
+  - stage: Apply
+    displayName: "4 - Terraform Apply (Main Only)"
+    dependsOn: WaitForApproval
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: ApplyTerraform
+        displayName: "Terraform Apply"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - bash: |
+              wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+              unzip -q terraform_$(terraformVersion)_linux_amd64.zip
+              sudo mv terraform /usr/local/bin/
+              terraform version
+            displayName: "Install Terraform $(terraformVersion)"
+
+          - task: DownloadBuildArtifacts@1
+            displayName: "Download Plan Artifact"
+            inputs:
+              artifactName: "terraform-plan"
+              downloadPath: "$(System.DefaultWorkingDirectory)/environments/dev"
+
+          - task: AzureCLI@2
+            displayName: "terraform init"
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(workingDirectory)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                terraform init \
+                  -backend-config="resource_group_name=$(backendResourceGroup)" \
+                  -backend-config="storage_account_name=$(backendStorageAccount)" \
+                  -backend-config="container_name=$(backendContainer)" \
+                  -backend-config="key=$(backendKey)"
+
+          - task: AzureCLI@2
+            displayName: "terraform apply"
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(workingDirectory)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_CLIENT_SECRET=$servicePrincipalKey
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                terraform apply -auto-approve tfplan
