@@ -27,9 +27,9 @@ azure-secure-foundation-iac/
  ├─ commands.txt              ← You are here
  └─ goals.txt
 
-─────────────────────────────────────────────────────────────
-STEP 1 — ONE-TIME BACKEND SETUP (run this FIRST, only once)
-─────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────────
+STEP 1 — ONE-TIME BACKEND SETUP (run this FIRST, only once) & Storage Accoun setup
+────────────────────────────────────────────────────────────────────────────────────
 
 az login
   # Login to your Azure account via browser
@@ -50,6 +50,11 @@ terraform apply
   # Creates the storage account that all other environments use for state
 
   ✅ After this: stgtfstate2606 exists in rg-tfstate in Central India
+
+az login
+az group create --name rg-tfstate --location "Central India"
+az storage account create --name stgtfstate2606 --resource-group rg-tfstate --location "Central India" --sku Standard_LRS
+az storage container create --name tfstate --account-name stgtfstate2606
 
 ─────────────────────────────────────────────────────────────
 STEP 2 — OIDC SETUP (one-time, for CI/CD — no secrets stored)
