@@ -1,0 +1,175 @@
+================================================================
+   DAY 10 — GOALS, OBJECTIVE & PURPOSE
+   azure-secure-foundation-iac
+================================================================
+
+─────────────────────────────────────────────────────────────
+WHAT IS THE OBJECTIVE OF DAY 10?
+─────────────────────────────────────────────────────────────
+
+Day 10 is not about learning a new feature.
+It is about proving you can BUILD something that a company
+would actually trust in production.
+
+The objective is to consolidate everything from Days 1–9
+into ONE coherent, professional, production-grade project
+that you can present to any hiring team.
+
+─────────────────────────────────────────────────────────────
+WHAT IS THE GOAL?
+─────────────────────────────────────────────────────────────
+
+To build a portfolio project that demonstrates:
+
+  ✅ Multi-environment design (dev / stage / prod)
+      → You understand that infra is not one-size-fits-all
+      → Different environments = different state, different settings
+
+  ✅ Remote backend with separate state per environment
+      → You understand why local state is dangerous
+      → Each env has isolated state: dev/ stage/ prod/ keys
+      → State is locked and stored securely in Azure Blob
+
+  ✅ Reusable Terraform modules
+      → You didn't copy-paste code across 3 environments
+      → Modules for networking, storage, keyvault, monitoring
+      → One change in a module propagates to all envs
+
+  ✅ Dynamic logic with for_each and dynamic blocks
+      → NSG rules are not hardcoded
+      → Subnets are defined as maps, rules as lists
+      → This makes the code scalable and readable
+
+  ✅ CI/CD via Azure DevOps pipeline
+      → Plan runs automatically on every PR
+      → Apply only runs when merged to main
+      → Prod requires manual approval before apply
+
+  ✅ OIDC Authentication
+      → No client secrets anywhere
+      → No credentials stored in pipeline variables
+      → Azure DevOps authenticates using federated identity tokens
+
+  ✅ Key Vault integration
+      → Secrets are stored in Key Vault, not in .tf files
+      → sensitive = true on all secret outputs
+      → purge_protection = true in prod
+
+  ✅ lifecycle prevent_destroy on critical resources
+      → Prod RG, Key Vault, and Storage Account cannot be
+         accidentally destroyed by terraform destroy
+      → You must explicitly remove the block to destroy
+
+  ✅ Drift detection
+      → A scheduled pipeline runs terraform plan daily in prod
+      → If infra was changed manually, the pipeline alerts you
+      → This is how real teams catch "ClickOps" changes
+
+  ✅ Documentation (README)
+      → Architecture explained
+      → State design explained
+      → Pipeline flow explained
+      → Security decisions explained
+      → Why OIDC explained
+
+─────────────────────────────────────────────────────────────
+WHAT IS THE PURPOSE?
+─────────────────────────────────────────────────────────────
+
+The purpose is your transformation from:
+  "I did some Terraform exercises"
+  →  to →
+  "I can design, build, and automate cloud infrastructure."
+
+This project becomes your PORTFOLIO ANCHOR.
+When you apply for Cloud / DevOps / Infrastructure roles,
+this is what you show instead of just listing Terraform on your CV.
+
+You can say:
+  "I built a production-grade IaC project with multi-environment
+   design, OIDC-secured CI/CD, Key Vault integration, lifecycle
+   protection, and automated drift detection."
+
+That sentence alone puts you above 80% of junior applicants.
+
+─────────────────────────────────────────────────────────────
+WHY DOES THIS MATTER IN THE REAL WORLD?
+─────────────────────────────────────────────────────────────
+
+REMOTE BACKEND
+→ Real companies NEVER store state locally.
+  If your laptop is stolen or crashes, state is gone.
+  Remote state in Azure Blob = safe, shared, locked.
+
+MODULES
+→ Large infra teams manage 50+ environments.
+  Without modules, every change is copy-paste hell.
+  With modules, fix it once, fix it everywhere.
+
+OIDC (No Secrets)
+→ Leaked service principal secrets have caused real data breaches.
+  OIDC eliminates the secret entirely.
+  This is the modern, correct way to authenticate pipelines.
+
+PREVENT_DESTROY
+→ Developers have accidentally destroyed production databases
+  and storage accounts. It happens more than you think.
+  prevent_destroy is your last line of defense.
+
+DRIFT DETECTION
+→ In real companies, someone ALWAYS clicks around in the portal.
+  They call it "quick fix". You call it "drift."
+  Drift means your state no longer reflects reality.
+  Automated drift detection catches this before it causes outages.
+
+CI/CD (Plan on PR, Apply on main)
+→ Manual terraform apply from someone's laptop is dangerous.
+  CI/CD ensures every change is reviewed (plan) before it happens.
+  Approval gates on prod means no one can deploy without sign-off.
+
+KEY VAULT
+→ Storing secrets in code or in plain text is how breaches happen.
+  Key Vault is the Azure-native way to manage secrets.
+  Marking outputs as sensitive = true prevents them appearing in logs.
+
+LOG ANALYTICS (Prod Only)
+→ Real production infra must be observable.
+  If something breaks, you need logs.
+  Dev doesn't need 90-day log retention — prod does.
+
+─────────────────────────────────────────────────────────────
+WHERE ARE YOU AFTER DAY 10?
+─────────────────────────────────────────────────────────────
+
+You are approximately 60–65% of a junior cloud infrastructure engineer.
+
+Skills you now have:
+  → Terraform core (providers, resources, variables, outputs, locals)
+  → Remote state management
+  → Module design
+  → Dynamic and conditional logic
+  → Lifecycle management
+  → CI/CD pipeline with Azure DevOps
+  → OIDC authentication
+  → Key Vault integration
+  → Drift detection
+
+Your next 30–45 day arc to become competitive:
+  → Azure networking deep dive (VNet peering, private endpoints, DNS)
+  → AKS with Terraform (Kubernetes infrastructure)
+  → Monitoring & alerting (Azure Monitor, Alerts)
+  → Cost management (budgets, cost analysis)
+  → Azure Policy + Terraform
+  → Terratest basics (automated infrastructure testing)
+  → Multi-region design
+
+─────────────────────────────────────────────────────────────
+THE SINGLE SENTENCE THAT SUMMARIZES DAY 10
+─────────────────────────────────────────────────────────────
+
+Day 10 is the day you stop being someone who learned Terraform
+and start being someone who can be trusted with infrastructure.
+
+================================================================
+   END OF GOALS
+================================================================

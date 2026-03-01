@@ -1,0 +1,211 @@
+================================================================
+   DAY 10 — ALL COMMANDS WITH EXPLANATION
+   azure-secure-foundation-iac
+================================================================
+
+─────────────────────────────────────────────────────────────
+SECTION 1: INITIAL SETUP — One-Time Azure Prep
+─────────────────────────────────────────────────────────────
+
+az login
+  # Login to Azure CLI. Opens a browser to authenticate your account.
+
+az account show
+  # Shows your current active subscription (name, ID, tenant ID).
+
+az account set --subscription "<your-subscription-id>"
+  # Switch to the correct subscription if you have multiple.
+
+az group create --name rg-tfstate --location "Central India"
+  # Creates the Resource Group that will HOLD your Terraform state storage account.
+
+az storage account create --name stgtfstate2606 --resource-group rg-tfstate --location "Central India" --sku Standard_LRS
+  # Creates the Azure Storage Account where all Terraform state files are stored remotely.
+
+az storage container create --name tfstate --account-name stgtfstate2606
+  # Creates the blob container inside the storage account. This is where .tfstate files live.
+
+─────────────────────────────────────────────────────────────
+SECTION 2: OIDC SETUP — Federated Identity (No Secrets)
+─────────────────────────────────────────────────────────────
+
+az ad app create --display-name "azure-devops-terraform-oidc"
+  # Creates an App Registration in Azure AD. This is the identity that Azure DevOps uses.
+
+az ad sp create --id <app-id>
+  # Creates a Service Principal for the App Registration. The SP is what gets permissions assigned.
+
+az role assignment create --assignee <sp-object-id> --role "Contributor" --scope /subscriptions/<sub-id>
+  # Grants the Service Principal Contributor rights over your subscription so Terraform can create resources.
+
+az ad app federated-credential create --id <app-id> --parameters '{
+  "name": "azure-devops-federation",
+  "issuer": "https://vstoken.dev.azure.com/<org-id>",
+  "subject": "sc://<org>/<project>/<service-connection-name>",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+  # Creates the OIDC Federated Credential. This tells Azure AD to trust tokens issued by Azure DevOps.
+  # The 'subject' matches the service connection you create in Azure DevOps.
+  # No client secret is ever created or stored.
+
+─────────────────────────────────────────────────────────────
+SECTION 3: TERRAFORM COMMANDS — Dev Environment
+─────────────────────────────────────────────────────────────
+
+cd environments/dev
+  # Always work from inside the environment folder. Each env is independent.
+
+terraform init
+  # Initializes Terraform. Downloads providers, connects to the remote backend.
+  # This reads backend.tf and creates the connection to Azure Blob Storage.
+
+terraform validate
+  # Validates all .tf files for syntax errors. Does NOT talk to Azure. Pure local check.
+
+terraform fmt
+  # Auto-formats all .tf files to Terraform's standard style.
+  # Use this before every commit. Good professional habit.
+
+terraform plan
+  # Shows what Terraform WILL DO without doing it.
+  # Compares current state to your .tf files and shows the diff.
+
+terraform plan -out=dev.tfplan
+  # Same as plan but saves the plan to a file.
+  # Best practice: always save plans in CI/CD so apply runs the EXACT same plan.
+
+terraform apply
+  # Applies changes. Asks for confirmation. Creates/updates/deletes resources.
+
+terraform apply dev.tfplan
+  # Applies a specific saved plan file. No confirmation prompt — deterministic.
+  # Used in CI/CD pipelines after plan is reviewed.
+
+terraform apply -auto-approve
+  # Applies without asking for confirmation.
+  # Only use in automated pipelines with proper approval gates upstream.
+
+terraform output
+  # Shows all defined outputs for the current environment after apply.
+
+terraform show
+  # Shows the full current state in human-readable format.
+
+terraform state list
+  # Lists all resources currently tracked in the state file.
+
+terraform state show <resource-address>
+  # Shows details of a specific resource in state.
+  # Example: terraform state show module.networking.azurerm_virtual_network.vnet
+
+terraform destroy
+  # Destroys ALL resources in the environment.
+  # Resources with prevent_destroy = true will BLOCK this and throw an error.
+
+─────────────────────────────────────────────────────────────
+SECTION 4: TERRAFORM COMMANDS — Stage Environment
+─────────────────────────────────────────────────────────────
+
+cd environments/stage
+terraform init
+terraform plan -out=stage.tfplan
+terraform apply stage.tfplan
+  # Same flow as dev but isolated state. Stage has its own state key: stage/terraform.tfstate
+
+─────────────────────────────────────────────────────────────
+SECTION 5: TERRAFORM COMMANDS — Prod Environment
+─────────────────────────────────────────────────────────────
+
+cd environments/prod
+terraform init
+terraform plan -out=prod.tfplan
+  # In prod, always review the plan output carefully before applying.
+  # Prod has prevent_destroy on the RG and Key Vault — those cannot be destroyed accidentally.
+
+terraform apply prod.tfplan
+  # Only run this after approval. In CI/CD this is gated by an Azure DevOps Environment approval.
+
+─────────────────────────────────────────────────────────────
+SECTION 6: DRIFT DETECTION
+─────────────────────────────────────────────────────────────
+
+terraform plan -detailed-exitcode
+  # Exit code 0 = No changes (no drift)
+  # Exit code 1 = Error
+  # Exit code 2 = Changes detected (DRIFT!)
+  # This is how the scheduled pipeline detects drift in prod.
+
+─────────────────────────────────────────────────────────────
+SECTION 7: DEBUGGING & TROUBLESHOOTING
+─────────────────────────────────────────────────────────────
+
+terraform plan -var="environment=prod" -var="location=Central India"
+  # Override variables inline. Useful for quick tests without changing tfvars.
+
+TF_LOG=DEBUG terraform plan
+  # Enable debug logging. Very verbose — shows all provider API calls.
+
+TF_LOG=ERROR terraform plan
+  # Only show errors. Cleaner output.
+
+terraform providers
+  # Shows which providers are being used and their versions.
+
+terraform version
+  # Shows current Terraform version.
+
+az storage blob list --account-name stgtfstate2606 --container-name tfstate --output table
+  # List all state files in your storage container.
+  # You should see: dev/terraform.tfstate, stage/terraform.tfstate, prod/terraform.tfstate
+
+az keyvault secret list --vault-name kv-demo-test-prod
+  # List secrets in your Key Vault (prod example).
+
+─────────────────────────────────────────────────────────────
+SECTION 8: GIT WORKFLOW FOR CI/CD
+─────────────────────────────────────────────────────────────
+
+git init
+  # Initialize a new git repository in the project folder.
+
+git add .
+  # Stage all files for commit.
+
+git commit -m "feat: initial Day 10 infrastructure setup"
+  # Commit with a meaningful message.
+
+git checkout -b feature/add-subnet
+  # Create and switch to a new branch for your changes.
+  # When you push this branch and open a PR, the pipeline auto-runs terraform plan.
+
+git push origin feature/add-subnet
+  # Push your branch. This triggers the PR pipeline in Azure DevOps.
+
+git checkout main && git merge feature/add-subnet
+  # Merge to main after PR approval. This triggers terraform apply.
+
+─────────────────────────────────────────────────────────────
+SECTION 9: USEFUL AZURE CLI CHECKS AFTER APPLY
+─────────────────────────────────────────────────────────────
+
+az group list --output table
+  # List all resource groups. Verify rg-demo-test-dev, rg-demo-test-stage, rg-demo-test-prod exist.
+
+az network vnet list --output table
+  # List all VNets created.
+
+az network vnet subnet list --resource-group rg-demo-test-dev --vnet-name vnet-demo-test-dev --output table
+  # List subnets inside a VNet.
+
+az network nsg list --resource-group rg-demo-test-dev --output table
+  # List NSGs.
+
+az keyvault list --output table
+  # List all Key Vaults.
+
+az monitor log-analytics workspace list --output table
+  # List Log Analytics workspaces (should only appear in prod).
+
+================================================================
+   END OF COMMANDS
+================================================================
