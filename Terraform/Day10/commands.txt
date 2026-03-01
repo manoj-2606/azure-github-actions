@@ -1,0 +1,227 @@
+================================================================
+  DAY 10 — ALL COMMANDS WITH EXPLANATION
+  Project: azure-secure-foundation-iac
+  Folder Structure: terraform/ ├─ modules/ ├─ envs/ └─ backend/
+================================================================
+
+─────────────────────────────────────────────────────────────
+STEP 0 — FOLDER STRUCTURE EXPLAINED
+─────────────────────────────────────────────────────────────
+
+azure-secure-foundation-iac/
+ ├─ terraform/
+ │   ├─ modules/              → Reusable building blocks (networking, storage, keyvault, monitoring)
+ │   │   ├─ networking/       → VNet, Subnets, NSGs with dynamic rules
+ │   │   ├─ storage/          → Storage Account with lifecycle policy
+ │   │   ├─ keyvault/         → Key Vault with access policies
+ │   │   └─ monitoring/       → Log Analytics Workspace
+ │   ├─ envs/                 → Environment-specific root configs
+ │   │   ├─ dev/              → Dev: main.tf, backend.tf, variables.tf, outputs.tf, tfvars
+ │   │   └─ stage/            → Stage: same files, different values
+ │   └─ backend/              → ONE-TIME setup: creates rg-tfstate + stgtfstate2606
+ ├─ .azure-pipelines/
+ │   ├─ azure-pipelines.yml   → Plan on PR, Apply on main, Approval on stage
+ │   └─ drift-detection.yml   → Scheduled daily drift check
+ ├─ .gitignore
+ ├─ README.md
+ ├─ commands.txt              ← You are here
+ └─ goals.txt
+
+─────────────────────────────────────────────────────────────
+STEP 1 — ONE-TIME BACKEND SETUP (run this FIRST, only once)
+─────────────────────────────────────────────────────────────
+
+az login
+  # Login to your Azure account via browser
+
+az account show
+  # Confirm you're on the right subscription
+
+cd terraform/backend
+  # Navigate into the backend setup folder
+
+terraform init
+  # Initialize — no remote backend needed here, uses local state
+
+terraform plan
+  # Review: will create rg-tfstate, stgtfstate2606, tfstate container
+
+terraform apply
+  # Creates the storage account that all other environments use for state
+
+  ✅ After this: stgtfstate2606 exists in rg-tfstate in Central India
+
+─────────────────────────────────────────────────────────────
+STEP 2 — OIDC SETUP (one-time, for CI/CD — no secrets stored)
+─────────────────────────────────────────────────────────────
+
+az ad app create --display-name "azure-devops-terraform-oidc"
+  # Create an App Registration in Azure AD (this is the pipeline's identity)
+
+az ad sp create --id <appId-from-above>
+  # Create a Service Principal for the App Registration
+
+az role assignment create \
+  --assignee <sp-object-id> \
+  --role "Contributor" \
+  --scope /subscriptions/<your-subscription-id>
+  # Grant the SP permission to create Azure resources
+
+az ad app federated-credential create --id <appId> --parameters '{
+  "name": "azure-devops-oidc",
+  "issuer": "https://vstoken.dev.azure.com/<your-org-id>",
+  "subject": "sc://<org>/<project>/azure-oidc-connection",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+  # Link Azure AD to trust Azure DevOps tokens — NO secrets, NO passwords
+
+─────────────────────────────────────────────────────────────
+STEP 3 — DEPLOY DEV ENVIRONMENT
+─────────────────────────────────────────────────────────────
+
+cd terraform/envs/dev
+  # Always cd into the environment before running terraform
+
+terraform init
+  # Downloads azurerm provider, connects to remote backend (stgtfstate2606)
+  # Creates state key: dev/terraform.tfstate in the tfstate container
+
+terraform validate
+  # Checks all .tf files for syntax errors (no Azure connection needed)
+
+terraform fmt
+  # Auto-formats all files — run this before every commit
+
+terraform plan -out=dev.tfplan
+  # Shows what will be created:
+  #   - rg-demo-test-dev (Central India)
+  #   - vnet-demo-test-dev
+  #   - snet-app-dev, snet-data-dev
+  #   - nsg-snet-app-dev, nsg-snet-data-dev
+  #   - Storage Account
+  #   - Key Vault
+
+terraform apply dev.tfplan
+  # Creates everything in the plan. Uses the saved plan — no surprises.
+
+terraform output
+  # Shows outputs: RG name, VNet name, subnet IDs, KV name, storage name
+
+terraform state list
+  # Lists all resources terraform is tracking in state
+
+─────────────────────────────────────────────────────────────
+STEP 4 — DEPLOY STAGE ENVIRONMENT
+─────────────────────────────────────────────────────────────
+
+cd terraform/envs/stage
+  # Different folder = different state = isolated from dev
+
+terraform init
+  # Connects to remote backend, state key: stage/terraform.tfstate
+
+terraform plan -out=stage.tfplan
+  # Stage has:
+  #   - 3 subnets (app, data, mgmt) vs dev's 2
+  #   - GRS replication on storage (vs LRS in dev)
+  #   - Purge protection ON in Key Vault
+  #   - Log Analytics Workspace (not in dev)
+
+terraform apply stage.tfplan
+  # Creates stage infrastructure — fully isolated from dev
+
+─────────────────────────────────────────────────────────────
+STEP 5 — DRIFT DETECTION (manual run)
+─────────────────────────────────────────────────────────────
+
+cd terraform/envs/dev
+terraform plan -detailed-exitcode
+  # Exit code 0 = No changes (clean, no drift)
+  # Exit code 1 = Terraform error
+  # Exit code 2 = Changes detected (DRIFT — someone touched Azure manually!)
+
+cd terraform/envs/stage
+terraform plan -detailed-exitcode
+  # Same check for stage
+
+─────────────────────────────────────────────────────────────
+STEP 6 — USEFUL TERRAFORM COMMANDS
+─────────────────────────────────────────────────────────────
+
+terraform state list
+  # Show all resources tracked in state
+
+terraform state show module.networking.azurerm_virtual_network.vnet
+  # Show full details of a specific resource in state
+
+terraform output
+  # Show all outputs defined in outputs.tf
+
+terraform output key_vault_uri
+  # Show a specific output value
+
+terraform destroy
+  # Destroy everything in current environment
+  # NOTE: Storage Account and Key Vault have prevent_destroy = true
+  #       You must remove the lifecycle block first or it will error
+
+TF_LOG=DEBUG terraform plan
+  # Run plan with verbose debug logging (shows all API calls)
+
+─────────────────────────────────────────────────────────────
+STEP 7 — AZURE CLI VERIFICATION COMMANDS
+─────────────────────────────────────────────────────────────
+
+az group list --output table
+  # Verify rg-demo-test-dev and rg-demo-test-stage exist
+
+az network vnet list --output table
+  # Verify VNets were created
+
+az network vnet subnet list \
+  --resource-group rg-demo-test-dev \
+  --vnet-name vnet-demo-test-dev \
+  --output table
+  # Verify subnets inside dev VNet
+
+az network nsg list \
+  --resource-group rg-demo-test-dev \
+  --output table
+  # Verify NSGs
+
+az keyvault list --output table
+  # Verify Key Vaults
+
+az storage blob list \
+  --account-name stgtfstate2606 \
+  --container-name tfstate \
+  --output table
+  # Verify state files: dev/terraform.tfstate and stage/terraform.tfstate
+
+az monitor log-analytics workspace list --output table
+  # Verify Log Analytics (should exist in stage, not dev)
+
+─────────────────────────────────────────────────────────────
+STEP 8 — GIT WORKFLOW (for Azure DevOps CI/CD)
+─────────────────────────────────────────────────────────────
+
+git init
+git add .
+git commit -m "feat: initial Day 10 project structure"
+  # First commit — sets up the repo
+
+git checkout -b feature/add-new-subnet
+  # Create a new branch for any change
+
+git push origin feature/add-new-subnet
+  # Push branch → opens PR in Azure DevOps → pipeline auto-runs terraform plan
+
+git checkout main
+git merge feature/add-new-subnet
+git push origin main
+  # Merge to main → pipeline auto-runs terraform apply for dev
+  # Stage apply waits for manual approval in Azure DevOps
+
+================================================================
+  END OF COMMANDS
+================================================================
