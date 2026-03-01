@@ -97,7 +97,7 @@ terraform validate
 terraform fmt
   # Auto-formats all files — run this before every commit
 
-terraform plan -out=dev.tfplan
+terraform plan -out dev.tfplan
   # Shows what will be created:
   #   - rg-demo-test-dev (Central India)
   #   - vnet-demo-test-dev
@@ -125,7 +125,7 @@ cd terraform/envs/stage
 terraform init
   # Connects to remote backend, state key: stage/terraform.tfstate
 
-terraform plan -out=stage.tfplan
+terraform plan -out stage.tfplan
   # Stage has:
   #   - 3 subnets (app, data, mgmt) vs dev's 2
   #   - GRS replication on storage (vs LRS in dev)
