@@ -1,0 +1,79 @@
+============================================================
+  DAY 11 — Identity, RBAC & Zero-Trust Infrastructure
+  Goals & Objectives
+============================================================
+
+PRIMARY GOAL:
+  Build a secure, least-privilege identity and access layer
+  using Terraform modules, fully deployed via Azure DevOps
+  pipeline with OIDC authentication.
+
+------------------------------------------------------------
+WHAT YOU WILL ACCOMPLISH TODAY:
+------------------------------------------------------------
+
+1. MANAGED IDENTITY MODULE
+   - Create a User-Assigned Managed Identity via Terraform
+   - Output principal_id and client_id for downstream use
+   - Understand: identity ≠ access (identity is just the "who")
+
+2. RBAC MODULE (The Core Skill)
+   - Build a reusable azurerm_role_assignment module
+   - Use for_each to assign multiple roles dynamically
+   - Scope roles correctly: RG-level vs Storage-level vs KV-level
+   - NEVER use Owner or subscription-wide Contributor
+
+3. KEY VAULT WITH RBAC MODEL
+   - Create Key Vault with enable_rbac_authorization = true
+   - Assign Key Vault Secrets User role (not Access Policies)
+   - Understand: RBAC model = modern, auditable, recommended
+
+4. PIPELINE LEAST PRIVILEGE
+   - Your ADO OIDC service connection scoped to RG only
+   - No subscription-wide Contributor
+   - Pipeline can only touch what it needs
+
+5. BACKEND STATE STORAGE
+   - Dedicated storage account for Terraform state
+   - Separate from application resources
+   - Secured with least-privilege access
+
+------------------------------------------------------------
+RULES FOR TODAY:
+------------------------------------------------------------
+
+  ❌ No Owner role assignments
+  ❌ No subscription-scope Contributor
+  ❌ No hardcoded secrets
+  ❌ No manual portal role assignments
+  ✅ Everything is code
+  ✅ Every role has a documented reason
+  ✅ Least-privilege at every scope level
+
+------------------------------------------------------------
+AZURE RESOURCES BEING CREATED (all in Central India):
+------------------------------------------------------------
+
+  - Resource Group      : rg-day11-identity
+  - Storage Account     : for Terraform backend state
+  - Storage Account     : for RBAC exercise (blob access)
+  - User-Assigned MI    : id-day11-app
+  - Key Vault           : kv-day11-[suffix]
+  - Role Assignments    : via for_each in RBAC module
+
+------------------------------------------------------------
+REAL-WORLD VALUE:
+------------------------------------------------------------
+
+  This pattern is used by:
+  - Every production Azure environment at enterprise scale
+  - DevOps teams that pass security audits
+  - Teams building for ISO 27001 / SOC2 / PCI-DSS compliance
+
+  After today, you understand:
+  - Identity lifecycle management
+  - Principle of least privilege in practice
+  - How secrets-free authentication works
+  - Why RBAC as code matters
+
+============================================================
