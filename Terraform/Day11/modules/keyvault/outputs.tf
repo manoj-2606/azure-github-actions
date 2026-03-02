@@ -1,22 +1,26 @@
 # ============================================================
-# Outputs the full map of created role assignment IDs
-# Useful for debugging and audit — you can see exactly
-# which role assignments Terraform created and their IDs
+# Key Vault Outputs
+#
+# id  → passed as scope to RBAC module for secret access roles
+# uri → used by app code / pipelines to read secrets
 # ============================================================
 
-output "role_assignment_ids" {
-  description = "Map of role assignment resource IDs keyed by assignment label"
-  value = {
-    for k, v in azurerm_role_assignment.this : k => v.id
-  }
+output "id" {
+  description = "Resource ID of the Key Vault — use as scope in RBAC module"
+  value       = azurerm_key_vault.this.id
 }
 
-output "role_assignment_summary" {
-  description = "Human-readable summary of what was assigned where"
-  value = {
-    for k, v in azurerm_role_assignment.this : k => {
-      role  = v.role_definition_name
-      scope = v.scope
-    }
-  }
+output "name" {
+  description = "Name of the Key Vault"
+  value       = azurerm_key_vault.this.name
+}
+
+output "uri" {
+  description = "Vault URI — used by apps to connect and read secrets"
+  value       = azurerm_key_vault.this.vault_uri
+}
+
+output "tenant_id" {
+  description = "Tenant ID the Key Vault belongs to"
+  value       = azurerm_key_vault.this.tenant_id
 }
