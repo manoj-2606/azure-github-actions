@@ -1,0 +1,265 @@
+# ============================================================
+# Day 11 — Azure DevOps Pipeline (Fixed)
+# Identity, RBAC & Zero-Trust Infrastructure
+# Flow: Validate → Plan → Apply
+# Auth: OIDC via existing service connection
+# ============================================================
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Terraform/Day11/**
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Terraform/Day11/**
+
+variables:
+  SERVICE_CONNECTION: "azure-service-connection"
+  ARM_SUBSCRIPTION_ID: "4985f681-bfb3-4e92-a131-b1e85dd4f934"
+  BACKEND_RESOURCE_GROUP: "rg-day11-tfstate"
+  BACKEND_STORAGE_ACCOUNT: "stday11tfstate0534"
+  BACKEND_CONTAINER: "tfstate"
+  TF_STATE_KEY: "day11.terraform.tfstate"
+  TF_WORKING_DIR: "Terraform/Day11"
+  TF_VERSION: "1.7.5"
+
+# ============================================================
+# STAGE 1 — VALIDATE
+# ============================================================
+stages:
+  - stage: Validate
+    displayName: "Validate Terraform"
+    jobs:
+      - job: ValidateJob
+        displayName: "Terraform Format and Validate"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          # Install Terraform via bash (no extension needed)
+          - task: Bash@3
+            displayName: "Install Terraform $(TF_VERSION)"
+            inputs:
+              targetType: inline
+              script: |
+                wget -q https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip
+                unzip -o terraform_$(TF_VERSION)_linux_amd64.zip
+                sudo mv terraform /usr/local/bin/
+                terraform version
+
+          - task: AzureCLI@2
+            displayName: "Terraform Init"
+            inputs:
+              azureSubscription: $(SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(TF_WORKING_DIR)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_USE_OIDC=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+
+                terraform init \
+                  -backend-config="resource_group_name=$(BACKEND_RESOURCE_GROUP)" \
+                  -backend-config="storage_account_name=$(BACKEND_STORAGE_ACCOUNT)" \
+                  -backend-config="container_name=$(BACKEND_CONTAINER)" \
+                  -backend-config="key=$(TF_STATE_KEY)" \
+                  -reconfigure
+
+          - task: AzureCLI@2
+            displayName: "Terraform Format Check"
+            inputs:
+              azureSubscription: $(SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(TF_WORKING_DIR)
+              addSpnToEnvironment: true
+              inlineScript: |
+                terraform fmt -check -recursive
+                echo "Format check passed"
+
+          - task: AzureCLI@2
+            displayName: "Terraform Validate"
+            inputs:
+              azureSubscription: $(SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(TF_WORKING_DIR)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_USE_OIDC=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+
+                terraform validate
+                echo "Validation passed"
+
+  # ============================================================
+  # STAGE 2 — PLAN
+  # ============================================================
+  - stage: Plan
+    displayName: "Terraform Plan"
+    dependsOn: Validate
+    condition: succeeded()
+    jobs:
+      - job: PlanJob
+        displayName: "Terraform Plan"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: Bash@3
+            displayName: "Install Terraform $(TF_VERSION)"
+            inputs:
+              targetType: inline
+              script: |
+                wget -q https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip
+                unzip -o terraform_$(TF_VERSION)_linux_amd64.zip
+                sudo mv terraform /usr/local/bin/
+                terraform version
+
+          - task: AzureCLI@2
+            displayName: "Terraform Init"
+            inputs:
+              azureSubscription: $(SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(TF_WORKING_DIR)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_USE_OIDC=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+
+                terraform init \
+                  -backend-config="resource_group_name=$(BACKEND_RESOURCE_GROUP)" \
+                  -backend-config="storage_account_name=$(BACKEND_STORAGE_ACCOUNT)" \
+                  -backend-config="container_name=$(BACKEND_CONTAINER)" \
+                  -backend-config="key=$(TF_STATE_KEY)" \
+                  -reconfigure
+
+          - task: AzureCLI@2
+            displayName: "Terraform Plan"
+            inputs:
+              azureSubscription: $(SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(TF_WORKING_DIR)
+              addSpnToEnvironment: true
+              inlineScript: |
+                export ARM_USE_OIDC=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+
+                terraform plan \
+                  -out=tfplan.binary \
+                  -var-file="terraform.tfvars"
+
+                terraform show -no-color tfplan.binary > tfplan.txt
+                echo "Plan complete"
+
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish Plan Binary"
+            inputs:
+              targetPath: "$(TF_WORKING_DIR)/tfplan.binary"
+              artifact: "tfplan"
+              publishLocation: "pipeline"
+
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish Plan TXT"
+            inputs:
+              targetPath: "$(TF_WORKING_DIR)/tfplan.txt"
+              artifact: "tfplan-readable"
+              publishLocation: "pipeline"
+
+  # ============================================================
+  # STAGE 3 — APPLY
+  # ============================================================
+  - stage: Apply
+    displayName: "Terraform Apply"
+    dependsOn: Plan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: ApplyJob
+        displayName: "Terraform Apply"
+        pool:
+          vmImage: "ubuntu-latest"
+        environment: "day11-production"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: Bash@3
+                  displayName: "Install Terraform $(TF_VERSION)"
+                  inputs:
+                    targetType: inline
+                    script: |
+                      wget -q https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip
+                      unzip -o terraform_$(TF_VERSION)_linux_amd64.zip
+                      sudo mv terraform /usr/local/bin/
+                      terraform version
+
+                # FIXED: correct property names for DownloadPipelineArtifact@2
+                - task: DownloadPipelineArtifact@2
+                  displayName: "Download Plan Binary"
+                  inputs:
+                    buildType: "current"
+                    artifactName: "tfplan"
+                    targetPath: "$(System.DefaultWorkingDirectory)/$(TF_WORKING_DIR)"
+
+                - task: AzureCLI@2
+                  displayName: "Terraform Init"
+                  inputs:
+                    azureSubscription: $(SERVICE_CONNECTION)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    workingDirectory: $(TF_WORKING_DIR)
+                    addSpnToEnvironment: true
+                    inlineScript: |
+                      export ARM_USE_OIDC=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+
+                      terraform init \
+                        -backend-config="resource_group_name=$(BACKEND_RESOURCE_GROUP)" \
+                        -backend-config="storage_account_name=$(BACKEND_STORAGE_ACCOUNT)" \
+                        -backend-config="container_name=$(BACKEND_CONTAINER)" \
+                        -backend-config="key=$(TF_STATE_KEY)" \
+                        -reconfigure
+
+                - task: AzureCLI@2
+                  displayName: "Terraform Apply"
+                  inputs:
+                    azureSubscription: $(SERVICE_CONNECTION)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    workingDirectory: $(TF_WORKING_DIR)
+                    addSpnToEnvironment: true
+                    inlineScript: |
+                      export ARM_USE_OIDC=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+
+                      terraform apply -auto-approve tfplan.binary
+
+                      echo "Day 11 infrastructure deployed successfully"
+                      echo "Resources created:"
+                      echo "  User-Assigned Managed Identity"
+                      echo "  Storage Account"
+                      echo "  Key Vault (RBAC mode)"
+                      echo "  Role Assignments via for_each"
