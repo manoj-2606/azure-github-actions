@@ -1,10 +1,3 @@
-# ============================================================
-# Day 11 — Azure DevOps Pipeline (Fixed)
-# Identity, RBAC & Zero-Trust Infrastructure
-# Flow: Validate → Plan → Apply
-# Auth: OIDC via existing service connection
-# ============================================================
-
 trigger:
   branches:
     include:
@@ -31,10 +24,10 @@ variables:
   TF_WORKING_DIR: "Terraform/Day11"
   TF_VERSION: "1.7.5"
 
-# ============================================================
-# STAGE 1 — VALIDATE
-# ============================================================
 stages:
+  # ============================================================
+  # STAGE 1 — VALIDATE
+  # ============================================================
   - stage: Validate
     displayName: "Validate Terraform"
     jobs:
@@ -43,9 +36,8 @@ stages:
         pool:
           vmImage: "ubuntu-latest"
         steps:
-          # Install Terraform via bash (no extension needed)
           - task: Bash@3
-            displayName: "Install Terraform $(TF_VERSION)"
+            displayName: "Install Terraform"
             inputs:
               targetType: inline
               script: |
@@ -55,7 +47,7 @@ stages:
                 terraform version
 
           - task: AzureCLI@2
-            displayName: "Terraform Init"
+            displayName: "Terraform Init and Validate"
             inputs:
               azureSubscription: $(SERVICE_CONNECTION)
               scriptType: bash
@@ -63,10 +55,16 @@ stages:
               workingDirectory: $(TF_WORKING_DIR)
               addSpnToEnvironment: true
               inlineScript: |
+                # ── OIDC token wiring ──────────────────────────
                 export ARM_USE_OIDC=true
+                export ARM_OIDC_TOKEN=$idToken
                 export ARM_CLIENT_ID=$servicePrincipalId
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+
+                echo "Client ID  : $ARM_CLIENT_ID"
+                echo "Tenant ID  : $ARM_TENANT_ID"
+                echo "Sub ID     : $ARM_SUBSCRIPTION_ID"
 
                 terraform init \
                   -backend-config="resource_group_name=$(BACKEND_RESOURCE_GROUP)" \
@@ -75,34 +73,11 @@ stages:
                   -backend-config="key=$(TF_STATE_KEY)" \
                   -reconfigure
 
-          - task: AzureCLI@2
-            displayName: "Terraform Format Check"
-            inputs:
-              azureSubscription: $(SERVICE_CONNECTION)
-              scriptType: bash
-              scriptLocation: inlineScript
-              workingDirectory: $(TF_WORKING_DIR)
-              addSpnToEnvironment: true
-              inlineScript: |
                 terraform fmt -check -recursive
                 echo "Format check passed"
 
-          - task: AzureCLI@2
-            displayName: "Terraform Validate"
-            inputs:
-              azureSubscription: $(SERVICE_CONNECTION)
-              scriptType: bash
-              scriptLocation: inlineScript
-              workingDirectory: $(TF_WORKING_DIR)
-              addSpnToEnvironment: true
-              inlineScript: |
-                export ARM_USE_OIDC=true
-                export ARM_CLIENT_ID=$servicePrincipalId
-                export ARM_TENANT_ID=$tenantId
-                export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
-
                 terraform validate
-                echo "Validation passed"
+                echo "Validate passed"
 
   # ============================================================
   # STAGE 2 — PLAN
@@ -118,7 +93,7 @@ stages:
           vmImage: "ubuntu-latest"
         steps:
           - task: Bash@3
-            displayName: "Install Terraform $(TF_VERSION)"
+            displayName: "Install Terraform"
             inputs:
               targetType: inline
               script: |
@@ -137,6 +112,7 @@ stages:
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_USE_OIDC=true
+                export ARM_OIDC_TOKEN=$idToken
                 export ARM_CLIENT_ID=$servicePrincipalId
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
@@ -158,6 +134,7 @@ stages:
               addSpnToEnvironment: true
               inlineScript: |
                 export ARM_USE_OIDC=true
+                export ARM_OIDC_TOKEN=$idToken
                 export ARM_CLIENT_ID=$servicePrincipalId
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
@@ -203,7 +180,7 @@ stages:
                 - checkout: self
 
                 - task: Bash@3
-                  displayName: "Install Terraform $(TF_VERSION)"
+                  displayName: "Install Terraform"
                   inputs:
                     targetType: inline
                     script: |
@@ -212,7 +189,6 @@ stages:
                       sudo mv terraform /usr/local/bin/
                       terraform version
 
-                # FIXED: correct property names for DownloadPipelineArtifact@2
                 - task: DownloadPipelineArtifact@2
                   displayName: "Download Plan Binary"
                   inputs:
@@ -230,6 +206,7 @@ stages:
                     addSpnToEnvironment: true
                     inlineScript: |
                       export ARM_USE_OIDC=true
+                      export ARM_OIDC_TOKEN=$idToken
                       export ARM_CLIENT_ID=$servicePrincipalId
                       export ARM_TENANT_ID=$tenantId
                       export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
@@ -251,15 +228,12 @@ stages:
                     addSpnToEnvironment: true
                     inlineScript: |
                       export ARM_USE_OIDC=true
+                      export ARM_OIDC_TOKEN=$idToken
                       export ARM_CLIENT_ID=$servicePrincipalId
                       export ARM_TENANT_ID=$tenantId
                       export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
 
                       terraform apply -auto-approve tfplan.binary
 
-                      echo "Day 11 infrastructure deployed successfully"
-                      echo "Resources created:"
-                      echo "  User-Assigned Managed Identity"
-                      echo "  Storage Account"
-                      echo "  Key Vault (RBAC mode)"
-                      echo "  Role Assignments via for_each"
+                      echo "Day 11 deployed successfully"
+                      terraform output
