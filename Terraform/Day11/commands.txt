@@ -1,0 +1,297 @@
+============================================================
+  DAY 11 — Every Command Used & Why
+  Identity, RBAC & Zero-Trust Infrastructure
+============================================================
+
+────────────────────────────────────────────────────────────
+STEP 1 — BACKEND BOOTSTRAP (Run Once Manually)
+────────────────────────────────────────────────────────────
+
+az group create \
+  --name rg-day11-tfstate \
+  --location centralindia
+
+  WHY: Creates a dedicated resource group for Terraform
+       backend state storage. Kept separate from application
+       resources so state is never accidentally destroyed.
+
+──────────────────────────────────────────────────────────
+
+az storage account create \
+  --name stday11tfstateXXXXX \
+  --resource-group rg-day11-tfstate \
+  --location centralindia \
+  --sku Standard_LRS \
+  --kind StorageV2 \
+  --min-tls-version TLS1_2 \
+  --allow-blob-public-access false
+
+  WHY: Creates the storage account that holds the Terraform
+       state file (terraform.tfstate). Remote state allows
+       multiple team members and pipelines to share the same
+       state safely. TLS1_2 and no public blob access are
+       security hardening settings.
+
+──────────────────────────────────────────────────────────
+
+az storage container create \
+  --name tfstate \
+  --account-name stday11tfstateXXXXX \
+  --auth-mode login
+
+  WHY: Creates the blob container inside the storage account
+       where the actual .tfstate file is stored. The
+       auth-mode login ensures we use Azure AD auth (not
+       storage account keys) — more secure.
+
+──────────────────────────────────────────────────────────
+
+az group create \
+  --name rg-day11-identity \
+  --location centralindia
+
+  WHY: Creates the main resource group for all Day 11
+       application resources — managed identity, storage
+       account, key vault, and role assignments all land here.
+
+────────────────────────────────────────────────────────────
+STEP 2 — GIT SETUP
+────────────────────────────────────────────────────────────
+
+mkdir -p day11/modules/identity day11/modules/rbac day11/modules/keyvault day11/pipeline
+
+  WHY: Creates the complete folder structure upfront so all
+       files are placed correctly from the start. Terraform
+       requires modules to be in their own subdirectories.
+
+──────────────────────────────────────────────────────────
+
+cd c:/dev/git/azure-github-actions
+
+  WHY: Navigate to the root of your git repository before
+       staging files — git commands must be run from inside
+       the repo.
+
+──────────────────────────────────────────────────────────
+
+git status
+
+  WHY: Always check what files are staged, unstaged, or
+       untracked before committing. Prevents accidentally
+       committing wrong files or missing files.
+
+──────────────────────────────────────────────────────────
+
+git add Terraform/Day11/
+
+  WHY: Stages all Day 11 files for commit. Using the folder
+       path instead of "git add ." ensures we only stage
+       Day 11 files and nothing else accidentally.
+
+──────────────────────────────────────────────────────────
+
+git commit -m "Day 11 - Identity, RBAC and Zero Trust Infrastructure"
+
+  WHY: Creates a commit with a meaningful message. Good
+       commit messages are important for audit trails —
+       especially for infrastructure code where you need
+       to know WHAT changed and WHY.
+
+──────────────────────────────────────────────────────────
+
+git push origin main
+
+  WHY: Pushes the commit to the remote repo (GitHub/ADO).
+       Azure DevOps pipeline reads YAML files directly from
+       the repo — files must be pushed before ADO can see
+       and run them.
+
+────────────────────────────────────────────────────────────
+STEP 3 — PIPELINE SP PERMISSION FIX
+────────────────────────────────────────────────────────────
+
+az role assignment create \
+  --assignee ed0c5240-dd3a-4397-b6b2-ec2effd5ae60 \
+  --role "User Access Administrator" \
+  --scope "/subscriptions/4985f681-bfb3-4e92-a131-b1e85dd4f934/resourceGroups/rg-day11-identity"
+
+  WHY: The pipeline service principal needs
+       Microsoft.Authorization/roleAssignments/write to
+       create role assignments via Terraform. This grants
+       "User Access Administrator" scoped ONLY to
+       rg-day11-identity — not subscription-wide.
+       This is least-privilege: the SP can assign roles
+       inside that RG and nowhere else.
+
+       Contributor  = create/modify resources      ✅ already had
+       User Access  = create role assignments      ✅ added here
+       Owner        = both everywhere              ❌ never use
+
+────────────────────────────────────────────────────────────
+STEP 4 — TERRAFORM COMMANDS (Run by Pipeline Automatically)
+These are what the pipeline executes — listed here so
+you understand what each stage does under the hood.
+────────────────────────────────────────────────────────────
+
+terraform init \
+  -backend-config="resource_group_name=rg-day11-tfstate" \
+  -backend-config="storage_account_name=stday11tfstateXXXXX" \
+  -backend-config="container_name=tfstate" \
+  -backend-config="key=day11.terraform.tfstate" \
+  -reconfigure
+
+  WHY: Initialises Terraform, downloads the azurerm provider,
+       and connects to the remote backend in Azure Storage.
+       -reconfigure forces it to use the backend config we
+       pass in (important in pipelines where workspace may
+       differ between runs).
+
+──────────────────────────────────────────────────────────
+
+terraform fmt -check -recursive
+
+  WHY: Checks that all .tf files are formatted to the
+       Terraform standard. Fails the pipeline if formatting
+       is wrong — enforces code consistency across the team.
+       Run "terraform fmt" locally to auto-fix before pushing.
+
+──────────────────────────────────────────────────────────
+
+terraform validate
+
+  WHY: Validates the Terraform configuration for syntax
+       errors and internal consistency. Does NOT connect
+       to Azure — purely a local code check. Catches issues
+       like missing variables, wrong resource types, bad
+       module references before hitting the API.
+
+──────────────────────────────────────────────────────────
+
+terraform plan \
+  -out=tfplan.binary \
+  -var-file="terraform.tfvars"
+
+  WHY: Connects to Azure and shows exactly what will be
+       created, changed, or destroyed. -out saves the plan
+       as a binary file so the Apply stage runs the EXACT
+       same plan — no surprises, no re-planning.
+       -var-file loads your variable values from tfvars.
+
+──────────────────────────────────────────────────────────
+
+terraform show -no-color tfplan.binary > tfplan.txt
+
+  WHY: Converts the binary plan to human-readable text and
+       saves it as a pipeline artifact. You can review
+       exactly what Terraform will do before approving Apply.
+
+──────────────────────────────────────────────────────────
+
+terraform apply -auto-approve tfplan.binary
+
+  WHY: Applies the saved plan binary to Azure. -auto-approve
+       skips the interactive confirmation (needed in
+       pipelines — no human at keyboard). Uses the binary
+       from the Plan stage — guaranteed same execution.
+
+──────────────────────────────────────────────────────────
+
+terraform output
+
+  WHY: Prints all output values after apply — principal_id,
+       client_id, key vault URI, storage account ID, and
+       role assignment summary. Used for verification and
+       can be consumed by downstream pipelines.
+
+────────────────────────────────────────────────────────────
+STEP 5 — USEFUL VERIFICATION COMMANDS (Run Locally)
+────────────────────────────────────────────────────────────
+
+az identity list \
+  --resource-group rg-day11-identity \
+  --output table
+
+  WHY: Verifies the User-Assigned Managed Identity was
+       created successfully. Shows name, location, client ID,
+       and principal ID.
+
+──────────────────────────────────────────────────────────
+
+az role assignment list \
+  --resource-group rg-day11-identity \
+  --output table
+
+  WHY: Lists ALL role assignments in the resource group.
+       Use this to audit who has access to what — confirms
+       your Terraform role assignments were applied correctly.
+
+──────────────────────────────────────────────────────────
+
+az role assignment list \
+  --assignee 5b91a77b-a7e7-43ab-a378-4774397454a6 \
+  --output table
+
+  WHY: Lists all roles assigned to a SPECIFIC principal
+       (your managed identity). Replace the GUID with your
+       identity_principal_id output value. This is how you
+       audit what a specific identity can do.
+
+──────────────────────────────────────────────────────────
+
+az keyvault show \
+  --name kv-day11-001 \
+  --resource-group rg-day11-identity \
+  --query properties.enableRbacAuthorization
+
+  WHY: Verifies Key Vault is using RBAC mode (returns true).
+       If it returns false or null, Access Policies mode is
+       active — which means the modern RBAC assignments
+       won't work on it.
+
+──────────────────────────────────────────────────────────
+
+az storage account show \
+  --name stday11app001 \
+  --resource-group rg-day11-identity \
+  --query id \
+  --output tsv
+
+  WHY: Gets the full resource ID of the storage account.
+       Useful for verifying RBAC scope is set correctly —
+       the scope in your role assignment should match this ID.
+
+──────────────────────────────────────────────────────────
+
+az account show --query id -o tsv
+
+  WHY: Gets your current subscription ID. Needed when
+       setting ARM_SUBSCRIPTION_ID in pipeline variables
+       or when scoping role assignments.
+
+============================================================
+  ENVIRONMENT VARIABLES SET IN PIPELINE (OIDC Auth)
+============================================================
+
+  export ARM_USE_OIDC=true
+    Tells azurerm provider to use OIDC token auth
+    instead of client secret or CLI auth.
+
+  export ARM_OIDC_TOKEN=$idToken
+    The actual JWT token ADO generates for OIDC.
+    Injected by addSpnToEnvironment: true in AzureCLI@2.
+    Without this, Terraform has no token to exchange
+    and falls back to CLI auth (which fails for SPs).
+
+  export ARM_CLIENT_ID=$servicePrincipalId
+    The app registration / service principal client ID.
+    Injected by addSpnToEnvironment: true.
+
+  export ARM_TENANT_ID=$tenantId
+    Azure AD tenant ID.
+    Injected by addSpnToEnvironment: true.
+
+  export ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID)
+    Your Azure subscription ID.
+    Set as a pipeline variable and referenced here.
+
+============================================================
