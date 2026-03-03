@@ -18,3 +18,12 @@ Providers & Resources
 8. What is the difference between a resource and a data source in Terraform?
 
 9. How do you reference the output of one resource as an input to another?
+
+State Management
+10. What is a remote backend in Terraform and why would you use it instead of a local state file?
+
+11. Have you ever worked with S3 as a remote backend? How do you configure it?
+
+12. What is state locking and which backends support it?
+
+13. What command would you use to manually remove a resource from the state without destroying it?
