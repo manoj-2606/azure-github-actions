@@ -7,6 +7,14 @@ Core Concepts
 
 3. What is a Terraform state file and why is it important?
 
-4.What happens if you manually delete a resource that was created by Terraform? What will Terraform do on the next plan?
+4. What happens if you manually delete a resource that was created by Terraform? What will Terraform do on the next plan?
 
-5.What is the difference between terraform.tfvars and variables.tf?
+5. What is the difference between terraform.tfvars and variables.tf?
+
+Providers & Resources
+6. What is a Terraform provider and how do you configure one?
+
+7. Can you use multiple providers in a single Terraform configuration? Give a real-life use case.
+8. What is the difference between a resource and a data source in Terraform?
+
+9. How do you reference the output of one resource as an input to another?
