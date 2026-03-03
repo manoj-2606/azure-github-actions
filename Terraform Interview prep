@@ -1,6 +1,7 @@
 Basic Level Terraform Interview Questions
 
 Core Concepts
+
 1.What is Terraform and how does it differ from other IaC tools like Ansible or CloudFormation?
 
 2. What is the difference between Terraform init, plan, apply, and destroy? Walk me through what happens in each step.
@@ -12,6 +13,7 @@ Core Concepts
 5. What is the difference between terraform.tfvars and variables.tf?
 
 Providers & Resources
+
 6. What is a Terraform provider and how do you configure one?
 
 7. Can you use multiple providers in a single Terraform configuration? Give a real-life use case.
@@ -20,6 +22,7 @@ Providers & Resources
 9. How do you reference the output of one resource as an input to another?
 
 State Management
+
 10. What is a remote backend in Terraform and why would you use it instead of a local state file?
 
 11. Have you ever worked with S3 as a remote backend? How do you configure it?
@@ -27,3 +30,11 @@ State Management
 12. What is state locking and which backends support it?
 
 13. What command would you use to manually remove a resource from the state without destroying it?
+
+Modules
+
+14. What is a Terraform module and why do we use it?
+
+15. What is the difference between a root module and a child module?
+
+16. How do you pass variables into a module and get outputs from it?
