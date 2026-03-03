@@ -38,3 +38,13 @@ Modules
 15. What is the difference between a root module and a child module?
 
 16. How do you pass variables into a module and get outputs from it?
+
+Real-Life Scenario Based
+
+17. Your team is working on the same Terraform code simultaneously — what problems can arise and how do you handle them?
+
+18. You ran terraform apply and it failed halfway — what is the state of your infrastructure now and how do you recover?
+
+19. A resource was created outside of Terraform (manually in AWS console) — how do you bring it under Terraform management?
+
+20. How would you handle sensitive values like passwords or API keys in Terraform?
