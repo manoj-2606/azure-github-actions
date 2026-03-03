@@ -1,1 +1,12 @@
 Basic Level Terraform Interview Questions
+
+Core Concepts
+1.What is Terraform and how does it differ from other IaC tools like Ansible or CloudFormation?
+
+2. What is the difference between Terraform init, plan, apply, and destroy? Walk me through what happens in each step.
+
+3. What is a Terraform state file and why is it important?
+
+4.What happens if you manually delete a resource that was created by Terraform? What will Terraform do on the next plan?
+
+5.What is the difference between terraform.tfvars and variables.tf?
