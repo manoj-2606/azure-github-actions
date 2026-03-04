@@ -12,6 +12,7 @@ Core Concepts
 4. What happens if you manually delete a resource that was created by Terraform? What will Terraform do on the next plan?
 
 5. What is the difference between terraform.tfvars and variables.tf?
+------------------------------------------
 
 Providers & Resources
 
