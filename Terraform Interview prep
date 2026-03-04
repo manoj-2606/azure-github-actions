@@ -22,6 +22,7 @@ Providers & Resources
 8. What is the difference between a resource and a data source in Terraform?
 
 9. How do you reference the output of one resource as an input to another?
+------------------------------------------
 
 State Management
 
