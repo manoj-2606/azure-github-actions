@@ -53,3 +53,4 @@ Real-Life Scenario Based
 19. A resource was created outside of Terraform (manually in AWS console) — how do you bring it under Terraform management?
 
 20. How would you handle sensitive values like passwords or API keys in Terraform?
+------------------------------------------
