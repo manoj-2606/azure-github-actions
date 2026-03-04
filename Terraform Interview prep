@@ -33,6 +33,7 @@ State Management
 12. What is state locking and which backends support it?
 
 13. What command would you use to manually remove a resource from the state without destroying it?
+------------------------------------------
 
 Modules
 
