@@ -34,31 +34,29 @@ steps:
       artifact: tfplan
       targetPath: "${{ parameters.workingDir }}"
 
-  - task: TerraformTaskV4@4
+  - task: Bash@3
     displayName: "Terraform Init"
     inputs:
-      provider: azurerm
-      command: init
+      targetType: inline
       workingDirectory: ${{ parameters.workingDir }}
-      backendServiceArm: "azure-service-connection"
-      backendAzureRmResourceGroupName: ${{ parameters.backendResourceGroup }}
-      backendAzureRmStorageAccountName: ${{ parameters.backendStorageAccount }}
-      backendAzureRmContainerName: ${{ parameters.backendContainer }}
-      backendAzureRmKey: "day12.terraform.tfstate"
+      script: |
+        terraform init \
+          -backend-config="resource_group_name=${{ parameters.backendResourceGroup }}" \
+          -backend-config="storage_account_name=${{ parameters.backendStorageAccount }}" \
+          -backend-config="container_name=${{ parameters.backendContainer }}" \
+          -backend-config="key=day12.terraform.tfstate"
     env:
       ARM_USE_OIDC: true
       ARM_CLIENT_ID: ${{ parameters.armClientId }}
       ARM_TENANT_ID: ${{ parameters.armTenantId }}
       ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
 
-  - task: TerraformTaskV4@4
+  - task: Bash@3
     displayName: "Terraform Apply"
     inputs:
-      provider: azurerm
-      command: apply
+      targetType: inline
       workingDirectory: ${{ parameters.workingDir }}
-      commandOptions: "-auto-approve tfplan"
-      environmentServiceNameAzureRM: "azure-service-connection"
+      script: terraform apply -auto-approve tfplan
     env:
       ARM_USE_OIDC: true
       ARM_CLIENT_ID: ${{ parameters.armClientId }}
