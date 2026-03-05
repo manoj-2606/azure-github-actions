@@ -21,7 +21,7 @@ resource "azurerm_key_vault" "main" {
   # Private endpoint is the ONLY allowed path
   network_acls {
     default_action = "Deny"
-    bypass         = ["AzureServices"]
+    bypass         = "AzureServices"
   }
 
   # ── Give the pipeline SP access to manage secrets ────────

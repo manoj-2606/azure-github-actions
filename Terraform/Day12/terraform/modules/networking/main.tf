@@ -60,7 +60,7 @@ resource "azurerm_subnet" "pe" {
   address_prefixes     = [var.pe_subnet_prefix]
 
   # Required: disable private endpoint network policies so private endpoints can get IPs
-  private_endpoint_network_policies_enabled = false
+  private_endpoint_network_policies_enabled = Disabled
 }
 
 # ============================================================
