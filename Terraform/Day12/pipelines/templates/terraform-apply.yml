@@ -35,7 +35,7 @@ steps:
       provider: azurerm
       command: init
       workingDirectory: ${{ parameters.workingDir }}
-      backendServiceArm: "day12-service-connection"
+      backendServiceArm: "azure-service-connection"
       backendAzureRmResourceGroupName: ${{ parameters.backendResourceGroup }}
       backendAzureRmStorageAccountName: ${{ parameters.backendStorageAccount }}
       backendAzureRmContainerName: ${{ parameters.backendContainer }}
