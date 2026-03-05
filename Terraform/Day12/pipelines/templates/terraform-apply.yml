@@ -32,13 +32,13 @@ steps:
     displayName: "Download Terraform Plan"
     inputs:
       artifact: tfplan
-      targetPath: "${{ parameters.workingDir }}"
+      targetPath: "$(Build.SourcesDirectory)/${{ parameters.workingDir }}"
 
   - task: Bash@3
     displayName: "Terraform Init"
     inputs:
       targetType: inline
-      workingDirectory: ${{ parameters.workingDir }}
+      workingDirectory: $(Build.SourcesDirectory)/${{ parameters.workingDir }}
       script: |
         terraform init \
           -backend-config="resource_group_name=${{ parameters.backendResourceGroup }}" \
@@ -55,7 +55,7 @@ steps:
     displayName: "Terraform Apply"
     inputs:
       targetType: inline
-      workingDirectory: ${{ parameters.workingDir }}
+      workingDirectory: $(Build.SourcesDirectory)/${{ parameters.workingDir }}
       script: terraform apply -auto-approve tfplan
     env:
       ARM_USE_OIDC: true

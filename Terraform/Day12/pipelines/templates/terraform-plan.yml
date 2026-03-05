@@ -32,7 +32,7 @@ steps:
     displayName: "Terraform Init"
     inputs:
       targetType: inline
-      workingDirectory: ${{ parameters.workingDir }}
+      workingDirectory: $(Build.SourcesDirectory)/${{ parameters.workingDir }}
       script: |
         terraform init \
           -backend-config="resource_group_name=${{ parameters.backendResourceGroup }}" \
@@ -44,13 +44,12 @@ steps:
       ARM_CLIENT_ID: ${{ parameters.armClientId }}
       ARM_TENANT_ID: ${{ parameters.armTenantId }}
       ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
-      AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
   - task: Bash@3
     displayName: "Terraform Validate"
     inputs:
       targetType: inline
-      workingDirectory: ${{ parameters.workingDir }}
+      workingDirectory: $(Build.SourcesDirectory)/${{ parameters.workingDir }}
       script: terraform validate
     env:
       ARM_USE_OIDC: true
@@ -62,7 +61,7 @@ steps:
     displayName: "Terraform Plan"
     inputs:
       targetType: inline
-      workingDirectory: ${{ parameters.workingDir }}
+      workingDirectory: $(Build.SourcesDirectory)/${{ parameters.workingDir }}
       script: |
         terraform plan \
           -out=tfplan \
@@ -78,6 +77,6 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: "Publish Terraform Plan"
     inputs:
-      targetPath: "${{ parameters.workingDir }}/tfplan"
+      targetPath: "$(Build.SourcesDirectory)/${{ parameters.workingDir }}/tfplan"
       artifact: tfplan
       publishLocation: pipeline
