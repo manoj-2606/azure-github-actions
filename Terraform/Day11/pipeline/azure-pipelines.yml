@@ -1,18 +1,18 @@
-# trigger:
-#   branches:
-#     include:
-#       - main
-#   paths:
-#     include:
-#       - Terraform/Day11/**
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Terraform/Day11/**
 
-# pr:
-#   branches:
-#     include:
-#       - main
-#   paths:
-#     include:
-#       - Terraform/Day11/**
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Terraform/Day11/**
 
 variables:
   SERVICE_CONNECTION: "azure-service-connection"
