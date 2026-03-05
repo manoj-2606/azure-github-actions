@@ -1,0 +1,238 @@
+============================================================
+  PROJECT PURPOSE — Day 12: Secure Network Architecture
+  Azure Hub-and-Spoke Topology with Private Endpoints
+============================================================
+
+------------------------------------------------------------
+WHAT IS THIS PROJECT?
+------------------------------------------------------------
+This project builds a production-grade secure Azure network
+topology using Terraform, deployed via Azure DevOps pipelines
+with OIDC authentication. It implements enterprise-level
+network isolation that meets European cloud security standards.
+
+Resources built:
+  - Hub VNet (10.0.0.0/16) + hub-subnet
+  - Spoke VNet (10.1.0.0/16) + app-subnet + data-subnet + pe-subnet
+  - VNet Peering (bidirectional: Hub ↔ Spoke)
+  - Azure Storage Account (public access fully disabled)
+  - Azure Key Vault (public access fully disabled)
+  - Private Endpoint for Storage (blob)
+  - Private Endpoint for Key Vault (vault)
+  - Private DNS Zone: privatelink.blob.core.windows.net
+  - Private DNS Zone: privatelink.vaultcore.azure.net
+  - DNS Zone links to both Hub and Spoke VNets
+  - NSG on app-subnet (allow HTTPS from VNet, deny all else)
+  - NSG on pe-subnet (allow HTTPS from app-subnet only)
+  - All deployed via Azure DevOps YAML pipeline (no manual clicks)
+
+------------------------------------------------------------
+WHY THIS PROJECT EXISTS
+------------------------------------------------------------
+RBAC (covered in previous days) stops privilege escalation —
+an attacker who gets credentials cannot do more than allowed.
+
+Network isolation stops lateral movement —
+an attacker who gets credentials cannot even REACH the service
+from the internet because there is no public endpoint.
+
+Both together = real security posture.
+
+This project adds the network isolation layer on top of the
+RBAC layer, making the infrastructure complete from a security
+architecture perspective.
+
+------------------------------------------------------------
+REAL WORLD PURPOSE — Why Companies Build This
+------------------------------------------------------------
+
+1. GDPR COMPLIANCE (Europe / Finland)
+   EU regulations require that personal data stored in cloud
+   services is not publicly accessible. Disabling public
+   endpoints on Storage and Key Vault directly satisfies this.
+   Private endpoints ensure data never leaves the Azure backbone.
+
+2. PCI-DSS COMPLIANCE (Payment industry)
+   Payment card data must be stored in network-isolated
+   environments. Hub-and-Spoke with private endpoints is the
+   standard pattern for PCI-DSS compliant Azure architectures.
+
+3. ISO 27001 / SOC2 REQUIREMENTS
+   These certifications require network segmentation, controlled
+   ingress/egress, and audit trails for all access attempts.
+   NSG rules + private endpoints directly satisfy these controls.
+
+4. ZERO TRUST ARCHITECTURE
+   Modern security assumes breach — "never trust, always verify."
+   Even if an attacker steals credentials, they cannot reach
+   Storage or Key Vault from outside the private network.
+   This is the network layer of Zero Trust.
+
+5. ENTERPRISE STANDARD TOPOLOGY
+   Hub-and-Spoke is the standard enterprise Azure topology used
+   by companies with 50+ Azure resources. The Hub centralises
+   shared services (DNS, firewall, VPN gateway). Spokes isolate
+   workloads. This is what Azure Landing Zone recommends.
+
+6. SECRETS NEVER EXPOSED
+   Key Vault with public access disabled means even if someone
+   finds your Key Vault URI, they cannot query it from the
+   internet. Only resources inside the VNet can reach it.
+   This protects connection strings, API keys, certificates.
+
+------------------------------------------------------------
+WHO USES THIS PATTERN IN REAL LIFE?
+------------------------------------------------------------
+  - Finnish banks and financial institutions (Nordea, OP)
+  - Healthcare companies storing patient data (GDPR)
+  - E-commerce platforms handling payment data (PCI-DSS)
+  - Government cloud deployments (strict isolation required)
+  - Any company going through ISO27001 or SOC2 audit
+  - Any company with a security-conscious cloud team
+
+------------------------------------------------------------
+ERRORS ENCOUNTERED AND HOW THEY WERE FIXED
+------------------------------------------------------------
+
+ERROR 1: 'ARM_SUBSCRIPTION_ID' is already defined
+  File: terraform-apply.yml
+  Cause: Copy-paste duplication — ARM_SUBSCRIPTION_ID was
+         listed twice in the env: block of the Apply task.
+  Fix: Removed the duplicate line from the env: block.
+
+ERROR 2: Variable group was not found or is not authorized
+  File: azure-pipelines.yml
+  Cause: Variable group name in YAML was "day12-vars" but the
+         actual group in Azure DevOps Library was named
+         "Terraform-day12-vars" — name mismatch.
+  Fix: Updated the YAML group name to match the actual name
+       in Azure DevOps Library exactly.
+
+ERROR 3: Environment day12-dev / day12-destroy could not be found
+  File: azure-pipelines.yml
+  Cause: Deployment jobs require environments to pre-exist in
+         Azure DevOps. They are not created automatically.
+  Fix: Manually created both environments in
+       Pipelines → Environments → New environment.
+
+ERROR 4: Service connection day12-service-connection not found
+  File: All 3 template yml files
+  Cause: Pipeline referenced "day12-service-connection" but the
+         actual service connection was named
+         "azure-service-connection".
+  Fix: Replaced all occurrences of "day12-service-connection"
+       with "azure-service-connection" across all 3 templates.
+
+ERROR 5: Terraform binary ENOENT — process failed to start
+  File: All 3 template yml files
+  Cause: TerraformInstaller@1 Azure DevOps task was resolving
+         "latest" to a non-existent version (1.14.6) and the
+         binary was never placed in the toolcache path.
+  Fix: Replaced TerraformInstaller@1 with a direct Bash install
+       step that downloads Terraform 1.10.3 directly from
+       HashiCorp releases and moves it to /usr/local/bin.
+
+ERROR 6: TerraformTaskV4 ignores manually installed binary
+  File: All 3 template yml files
+  Cause: TerraformTaskV4@4 has its own toolcache path and does
+         not use the binary installed manually by bash. The two
+         approaches conflict with each other.
+  Fix: Replaced ALL TerraformTaskV4@4 tasks entirely with
+       pure Bash@3 tasks. No more dependency on the broken
+       Azure DevOps Terraform task at all.
+
+ERROR 7: Not found workingDirectory: /home/vsts/work/1/s/terraform
+  File: All 3 template yml files
+  Cause: Two issues combined:
+         (1) TF_WORKING_DIR was set to "terraform" but the repo
+             structure has it at "Terraform/Day12/terraform"
+         (2) Missing "- checkout: self" in the Plan stage job
+  Fix: (1) Updated TF_WORKING_DIR to "Terraform/Day12/terraform"
+       (2) Added "- checkout: self" to the Plan stage steps
+       (3) Added $(Build.SourcesDirectory)/ prefix to all
+           workingDirectory values in templates
+
+ERROR 8: Error building ARM Config — Please run 'az login'
+  File: All 3 template yml files
+  Cause: Terraform was falling back to Azure CLI authentication
+         because the OIDC token was not being passed to it.
+         ARM_USE_OIDC=true alone is not enough — Terraform also
+         needs the actual OIDC token value.
+  Fix: Added AzureCLI@2 task with addSpnToEnvironment: true
+       before every Terraform Init step. This task fetches the
+       OIDC token from the service connection and stores it as
+       ARM_OIDC_TOKEN pipeline variable which is then passed
+       into every Terraform bash task via env: block.
+
+ERROR 9: private_endpoint_network_policies_enabled deprecation
+  File: modules/networking/main.tf
+  Cause: Old attribute name used. In azurerm 3.x the attribute
+         was renamed from "private_endpoint_network_policies_enabled"
+         (bool) to "private_endpoint_network_policies" (string).
+  Fix: Changed attribute name to "private_endpoint_network_policies"
+       and value from false to "Disabled" (quoted string).
+
+ERROR 10: bypass = ["AzureServices"] incorrect type for Key Vault
+  File: modules/keyvault/main.tf
+  Cause: Key Vault network_acls bypass expects a string, not a
+         list. Storage account uses a list — Key Vault does not.
+         Different resources have different schemas in azurerm.
+  Fix: Changed bypass = ["AzureServices"] to bypass = "AzureServices"
+       (removed the square brackets — plain string, not a list)
+
+ERROR 11: https_traffic_only_enabled is not expected here
+  File: modules/storage/main.tf
+  Cause: This attribute was removed in newer azurerm 3.x versions
+         because HTTPS-only is now enforced by default on all
+         storage accounts — no need to set it explicitly.
+  Fix: Removed the https_traffic_only_enabled = true line entirely.
+
+ERROR 12: 403 Key based authentication is not permitted
+  File: modules/storage/main.tf
+  Cause: shared_access_key_enabled = false was set, which blocks
+         the azurerm Terraform provider from managing the storage
+         account. The provider uses key-based auth internally to
+         configure queue/blob properties after creation.
+  Fix: Removed shared_access_key_enabled = false. The security
+       goal is already met by public_network_access_enabled = false
+       and the private endpoint. Key auth disable requires extra
+       Azure AD role assignments to work with Terraform provider.
+
+ERROR 13: Module not installed — run terraform init first
+  Location: Local PowerShell terminal
+  Cause: Ran "terraform state rm" locally without running
+         "terraform init" first. Without init, Terraform has no
+         backend connection and no module registry — it cannot
+         read or modify state.
+  Fix: Run terraform init with full backend-config flags first,
+       then run terraform state rm after init succeeds.
+
+------------------------------------------------------------
+KEY LESSONS LEARNED FROM THIS PROJECT
+------------------------------------------------------------
+
+1. Always match names exactly — variable groups, service
+   connections, and environments are case-sensitive in Azure DevOps.
+
+2. TerraformInstaller@1 and TerraformTaskV4@4 are unreliable
+   on Microsoft-hosted agents. Pure Bash tasks are more stable
+   and give you full control over the Terraform binary.
+
+3. OIDC authentication requires both ARM_USE_OIDC=true AND
+   the actual ARM_OIDC_TOKEN value. Use AzureCLI@2 with
+   addSpnToEnvironment: true to fetch the token first.
+
+4. Always check repo folder structure vs TF_WORKING_DIR value.
+   The agent checks out the full repo — path must match exactly.
+
+5. azurerm provider attributes change between versions.
+   Always check the provider version changelog when upgrading.
+
+6. shared_access_key_enabled = false requires extra setup.
+   Don't use it unless you've assigned Storage Blob Data
+   Contributor role to the Service Principal running Terraform.
+
+7. terraform init must be run before any terraform state commands.
+   State commands need the backend connection to be configured.
+
+============================================================
