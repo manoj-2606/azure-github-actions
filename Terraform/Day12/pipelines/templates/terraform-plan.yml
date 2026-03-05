@@ -19,9 +19,9 @@ parameters:
 steps:
 
   - task: TerraformInstaller@1
-    displayName: "Install Terraform ${{ parameters.tfVersion }}"
+    displayName: "Install Terraform"
     inputs:
-      terraformVersion: ${{ parameters.tfVersion }}
+      terraformVersion: "latest"
 
   - task: TerraformTaskV4@4
     displayName: "Terraform Init"
