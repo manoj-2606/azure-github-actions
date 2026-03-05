@@ -11,7 +11,6 @@ resource "azurerm_storage_account" "main" {
 
   # ── Security hardening ────────────────────────────────────
   min_tls_version           = "TLS1_2"
-  https_traffic_only_enabled = true
   shared_access_key_enabled  = false
 
   # ── Deny all traffic by default ───────────────────────────
