@@ -59,8 +59,8 @@ resource "azurerm_subnet" "pe" {
   virtual_network_name = azurerm_virtual_network.spoke.name
   address_prefixes     = [var.pe_subnet_prefix]
 
-  # Required: disable private endpoint network policies so private endpoints can get IPs
-  private_endpoint_network_policies_enabled = "Disabled"
+  # New attribute name in azurerm 3.x — no "_enabled" at the end
+  private_endpoint_network_policies = "Disabled"
 }
 
 # ============================================================
