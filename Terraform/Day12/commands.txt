@@ -1,0 +1,232 @@
+============================================================
+  DAY 12 — ALL COMMANDS WITH EXPLANATIONS
+============================================================
+
+This file documents every command used in Day 12, what it does,
+and why you run it. Use this as your reference sheet.
+
+------------------------------------------------------------
+SECTION 1 — LOCAL TERRAFORM COMMANDS (for understanding/testing)
+------------------------------------------------------------
+
+terraform init
+  → Downloads required providers (azurerm) and initialises backend
+  → Must run this first before any other terraform command
+  → If backend config changes, run: terraform init -reconfigure
+
+terraform validate
+  → Checks your .tf files for syntax errors and config mistakes
+  → Does NOT connect to Azure — purely local check
+  → Run this after writing new code before planning
+
+terraform fmt
+  → Auto-formats all .tf files to standard style
+  → Run this before committing code
+  → Use -recursive flag for modules: terraform fmt -recursive
+
+terraform plan -out=tfplan
+  → Shows what Azure resources will be created/changed/destroyed
+  → -out=tfplan saves the plan to a file (used by apply in pipeline)
+  → Nothing is created yet — this is a preview only
+  → Read this carefully before applying
+
+terraform apply tfplan
+  → Applies the saved plan file — creates resources in Azure
+  → Using the saved plan ensures apply matches exactly what plan showed
+  → In pipeline: terraform apply -auto-approve tfplan
+
+terraform destroy
+  → Destroys all resources managed by this Terraform state
+  → DANGEROUS — only run intentionally
+  → In pipeline: triggered manually with approval gate
+
+terraform output
+  → Shows all output values defined in outputs.tf
+  → Use after apply to get private IPs, resource IDs, DNS records
+
+terraform state list
+  → Lists all resources currently tracked in Terraform state
+  → Useful to verify what's been created
+
+terraform state show azurerm_virtual_network.hub
+  → Shows full details of a specific resource in state
+  → Replace resource address with the one you want to inspect
+
+------------------------------------------------------------
+SECTION 2 — AZURE CLI COMMANDS
+------------------------------------------------------------
+
+az login
+  → Interactive login to Azure
+  → In CI/CD pipeline this is done via OIDC — not needed manually
+
+az account set --subscription "<subscription-id>"
+  → Sets the active subscription context
+  → Replace with your actual subscription ID
+
+az group list --output table
+  → Lists all resource groups in your subscription
+  → Good for verifying your RG was created
+
+az network vnet list --resource-group rg-day12-centralindia --output table
+  → Lists all VNets in the Day 12 resource group
+  → Verify Hub and Spoke VNets were created
+
+az network vnet peering list --vnet-name hub-vnet --resource-group rg-day12-centralindia --output table
+  → Lists VNet peering connections for the Hub VNet
+  → Verify peering state shows "Connected"
+
+az network private-endpoint list --resource-group rg-day12-centralindia --output table
+  → Lists all private endpoints in the resource group
+  → Verify both Storage and Key Vault private endpoints exist
+
+az network private-dns zone list --resource-group rg-day12-centralindia --output table
+  → Lists all Private DNS Zones
+  → Should show: privatelink.blob.core.windows.net and privatelink.vaultcore.azure.net
+
+az network private-dns record-set a list --zone-name privatelink.blob.core.windows.net --resource-group rg-day12-centralindia --output table
+  → Lists A records in the Storage private DNS zone
+  → Should show a record pointing to a 10.1.3.x private IP
+
+az network private-dns record-set a list --zone-name privatelink.vaultcore.azure.net --resource-group rg-day12-centralindia --output table
+  → Lists A records in the Key Vault private DNS zone
+  → Should show a record pointing to a 10.1.3.x private IP
+
+az storage account show --name <storage-account-name> --resource-group rg-day12-centralindia --query "publicNetworkAccess"
+  → Checks if public network access is disabled on Storage Account
+  → Expected output: "Disabled"
+
+az keyvault show --name <keyvault-name> --resource-group rg-day12-centralindia --query "properties.publicNetworkAccess"
+  → Checks if public network access is disabled on Key Vault
+  → Expected output: "Disabled"
+
+az network nsg list --resource-group rg-day12-centralindia --output table
+  → Lists all NSGs in the resource group
+  → Verify NSGs were created and associated to subnets
+
+az network nsg rule list --nsg-name nsg-app-subnet --resource-group rg-day12-centralindia --output table
+  → Lists all rules in the app-subnet NSG
+  → Verify your allow/deny rules are present
+
+------------------------------------------------------------
+SECTION 3 — BACKEND STORAGE BOOTSTRAP COMMANDS
+------------------------------------------------------------
+(Run these ONCE manually before the pipeline — creates Terraform remote state storage)
+
+az group create --name rg-tfstate-day12 --location centralindia
+  → Creates resource group to hold Terraform state storage
+  → This is separate from your main Day 12 resource group
+
+az storage account create \
+  --name stday12tfstate<unique> \
+  --resource-group rg-tfstate-day12 \
+  --location centralindia \
+  --sku Standard_LRS \
+  --min-tls-version TLS1_2
+  → Creates storage account for Terraform remote state
+  → Replace <unique> with random letters to make name globally unique
+  → Standard_LRS is sufficient for state files
+
+az storage container create \
+  --name tfstate \
+  --account-name stday12tfstate<unique>
+  → Creates blob container inside the storage account
+  → This container stores your terraform.tfstate file
+
+------------------------------------------------------------
+SECTION 4 — AZURE DEVOPS PIPELINE COMMANDS
+------------------------------------------------------------
+(These run automatically in the pipeline — documented here for understanding)
+
+az pipelines create --name day12-secure-network --yml-path pipelines/azure-pipelines.yml
+  → Creates pipeline in Azure DevOps pointing to your YAML file
+  → Run this from Azure DevOps CLI if setting up via CLI
+
+az pipelines run --name day12-secure-network
+  → Manually triggers the pipeline
+  → Normally triggered by git push to main branch
+
+------------------------------------------------------------
+SECTION 5 — GIT COMMANDS
+------------------------------------------------------------
+
+git init
+  → Initialises a new git repository in current folder
+
+git remote add origin <azure-devops-repo-url>
+  → Links local repo to Azure DevOps remote repository
+
+git add .
+  → Stages all files for commit
+
+git commit -m "Day 12: Secure Network Architecture - Hub-Spoke topology"
+  → Commits staged files with a descriptive message
+
+git push origin main
+  → Pushes commits to Azure DevOps — this triggers the pipeline
+
+git status
+  → Shows which files are modified, staged, or untracked
+
+------------------------------------------------------------
+SECTION 6 — VALIDATION COMMANDS (run after apply)
+------------------------------------------------------------
+
+# Test that public access is blocked (this should FAIL with 403 or connection refused)
+curl -I https://<storage-account-name>.blob.core.windows.net
+  → Expected: Connection refused or 403 Forbidden
+  → If it succeeds — public access is NOT disabled correctly
+
+# Check private endpoint NIC private IP
+az network nic show \
+  --ids $(az network private-endpoint show \
+    --name pe-storage \
+    --resource-group rg-day12-centralindia \
+    --query "networkInterfaces[0].id" -o tsv) \
+  --query "ipConfigurations[0].privateIpAddress" -o tsv
+  → Shows the private IP assigned to the storage private endpoint
+  → Should be in range 10.1.3.x
+
+# Verify DNS zone is linked to VNet
+az network private-dns link vnet list \
+  --zone-name privatelink.blob.core.windows.net \
+  --resource-group rg-day12-centralindia \
+  --output table
+  → Shows which VNets are linked to the Private DNS Zone
+  → Both Hub and Spoke VNets should appear
+
+============================================================
+  KEY CONCEPTS CHEATSHEET
+============================================================
+
+VNet Peering
+  → Connects two VNets so resources can communicate via private IPs
+  → Must be created in BOTH directions (hub→spoke AND spoke→hub)
+  → allow_forwarded_traffic: allows traffic that didn't originate in VNet
+  → allow_gateway_transit: allows peered VNet to use this VNet's gateway
+
+Private Endpoint
+  → Creates a private NIC inside your subnet for an Azure service
+  → Service gets a private IP (e.g., 10.1.3.4) — no public IP used
+  → Traffic stays on Azure backbone — never touches internet
+
+Private DNS Zone
+  → Resolves service hostnames to private IPs inside VNet
+  → e.g., mystorageaccount.blob.core.windows.net → 10.1.3.4
+  → Zone must be LINKED to VNet for resolution to work
+  → Azure automatically creates DNS records when private endpoint is created
+
+NSG (Network Security Group)
+  → Firewall rules applied at subnet or NIC level
+  → Inbound rules: control what traffic can enter
+  → Outbound rules: control what traffic can leave
+  → Rules evaluated by priority (lower number = higher priority)
+  → Default: deny all inbound from internet, allow all outbound
+
+Hub-and-Spoke
+  → Hub VNet: central point, contains shared services (firewall, DNS, VPN gateway)
+  → Spoke VNets: workload VNets, connected to Hub via peering
+  → All traffic between spokes routes through Hub (if Azure Firewall is in hub)
+  → Today: simple peering without central firewall (that's AKS/advanced days)
+
+============================================================
