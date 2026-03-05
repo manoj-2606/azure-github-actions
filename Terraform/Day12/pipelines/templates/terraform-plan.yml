@@ -18,10 +18,15 @@ parameters:
 
 steps:
 
-  - task: TerraformInstaller@1
-    displayName: "Install Terraform"
+  - task: Bash@3
+    displayName: "Install Terraform 1.10.3"
     inputs:
-      terraformVersion: "latest"
+      targetType: inline
+      script: |
+        wget -q https://releases.hashicorp.com/terraform/1.10.3/terraform_1.10.3_linux_amd64.zip
+        unzip -o terraform_1.10.3_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/terraform
+        terraform version
 
   - task: TerraformTaskV4@4
     displayName: "Terraform Init"
