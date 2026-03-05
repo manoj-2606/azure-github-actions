@@ -1,0 +1,135 @@
+Basic Level Terraform Interview Questions
+------------------------------------------------------------------------------------------------------------------------------
+
+Core Concepts
+
+1.What is Terraform and how does it differ from other IaC tools like Ansible or CloudFormation?
+
+2. What is the difference between Terraform init, plan, apply, and destroy? Walk me through what happens in each step.
+
+3. What is a Terraform state file and why is it important?
+
+4. What happens if you manually delete a resource that was created by Terraform? What will Terraform do on the next plan?
+
+5. What is the difference between terraform.tfvars and variables.tf?
+------------------------------------------------------------------------------------------------------------------------------
+
+Providers & Resources
+
+6. What is a Terraform provider and how do you configure one?
+
+7. Can you use multiple providers in a single Terraform configuration? Give a real-life use case.
+8. What is the difference between a resource and a data source in Terraform?
+
+9. How do you reference the output of one resource as an input to another?
+------------------------------------------------------------------------------------------------------------------------------
+
+State Management
+
+10. What is a remote backend in Terraform and why would you use it instead of a local state file?
+
+11. Have you ever worked with S3 as a remote backend? How do you configure it?
+
+12. What is state locking and which backends support it?
+
+13. What command would you use to manually remove a resource from the state without destroying it?
+------------------------------------------------------------------------------------------------------------------------------
+
+Modules
+
+14. What is a Terraform module and why do we use it?
+
+15. What is the difference between a root module and a child module?
+
+16. How do you pass variables into a module and get outputs from it?
+------------------------------------------------------------------------------------------------------------------------------
+
+Real-Life Scenario Based
+
+17. Your team is working on the same Terraform code simultaneously — what problems can arise and how do you handle them?
+
+18. You ran terraform apply and it failed halfway — what is the state of your infrastructure now and how do you recover?
+
+19. A resource was created outside of Terraform (manually in AWS console) — how do you bring it under Terraform management?
+
+20. How would you handle sensitive values like passwords or API keys in Terraform?
+------------------------------------------------------------------------------------------------------------------------------
+
+Real-Life Product Company Terraform Interview Questions
+
+🔬 Technical Terminology Deep Dives
+"Define and explain how you've used..."
+
+What is the difference between count and for_each in Terraform? In what real scenario would choosing count over for_each break your infrastructure during a resource deletion?
+You hear the term "idempotency" a lot with Terraform — can you explain what it means and give a situation where your Terraform code was NOT idempotent and what caused it?
+What is terraform taint and it's replacement in newer versions? Have you ever had to force-recreate a resource — what was the real reason behind it?
+What does lifecycle block do? Explain create_before_destroy, prevent_destroy, and ignore_changes with real use cases for each — not just definitions.
+What is the difference between implicit and explicit dependencies in Terraform? Can you give a case where Terraform got the dependency order wrong and caused a failure?
+What is terraform refresh and when would you actually use it in production? What are the risks?
+Explain locals vs variables — in a real project, how do you decide which one to use?
+What is a null resource and what are provisioners? Why does the Terraform community consider provisioners a last resort?
+What does the .terraform.lock.hcl file do? What happens if two engineers have different provider versions and this file is not committed to Git?
+What is terraform workspace and have you used it in real projects? What are its limitations and why do some teams avoid it for environment management?
+------------------------------------------------------------------------------------------------------------------------------
+
+⚙️ State File — Deep Real-Life Scenarios
+
+Your S3 remote state file got corrupted — how do you recover? What preventive measures should have been in place?
+Two engineers ran terraform apply at the same time and state locking failed — what are the consequences and how do you fix the resulting conflict?
+What is terraform state mv? Give a real situation — like renaming a module — where you'd need it to avoid resource destruction.
+You need to split a large monolithic Terraform state into multiple smaller states — how do you approach this without destroying existing infrastructure?
+What is state drift? How do you detect it and how do you handle it in a production environment where someone made a manual change to a critical resource?
+Your team migrated from local state to S3 backend mid-project — walk me through exactly how you'd do that safely.
+------------------------------------------------------------------------------------------------------------------------------
+
+🏗️ Real Project Structure & Workflows
+
+How did you structure your Terraform code in your last project — monorepo or separate repos per service? What were the tradeoffs?
+In your project, how did you manage different configurations for dev, staging, and prod — workspaces, separate directories, or separate variable files? Why that approach?
+Have you ever written a reusable module that was consumed by multiple teams? What challenges came up around versioning and backward compatibility?
+How do you handle Terraform module versioning — what happens when you update a module and 5 teams are using it?
+What is your approach to breaking changes in Terraform — for example, when a provider upgrade changes a resource argument?
+------------------------------------------------------------------------------------------------------------------------------
+
+🔗 Terraform with CI/CD — Real Pipeline Questions
+
+How have you integrated Terraform into a CI/CD pipeline (GitLab CI / GitHub Actions / Jenkins)? Walk through the exact stages you set up.
+In your pipeline, who has the authority to run terraform apply — is it automated or does it require manual approval? How did you implement that gate?
+How do you handle terraform plan output in a pull request so reviewers can see infra changes before merging?
+Your pipeline runs terraform apply and it times out halfway due to a long-running resource — how does your pipeline handle that? What's left behind?
+How do you manage Terraform execution in parallel for multiple environments in the same pipeline without state conflicts?
+------------------------------------------------------------------------------------------------------------------------------
+
+☁️ Terraform + AWS Real Scenarios
+
+You're provisioning an EKS cluster via Terraform — what are all the dependent resources you need to manage and in what order do they need to be created?
+You created an RDS instance via Terraform but the password is now visible in the state file — how do you remediate this and prevent it going forward?
+How do you manage IAM roles and policies through Terraform without accidentally granting excessive permissions during apply?
+You need to rotate a secret stored in AWS Secrets Manager that was originally created by Terraform — how do you do it without causing terraform plan to show a diff every time?
+Your team provisions VPCs, subnets, and security groups — how do you share these networking outputs across different Terraform projects/state files?
+------------------------------------------------------------------------------------------------------------------------------
+
+💥 Failure & Incident Scenarios
+
+You accidentally ran terraform destroy on a production environment — what is your immediate response and how do you recover?
+A terraform apply in production deleted a security group that was attached to 10 running EC2 instances — why did this happen and how do you prevent it?
+After a provider upgrade, terraform plan shows 40+ resources need to be replaced — how do you investigate the root cause and handle this without downtime?
+Your Terraform apply is stuck in a "still creating..." loop for 30+ minutes — how do you debug it and what are the possible causes?
+A new team member directly edited the state file to fix an issue — what are the risks and what should they have done instead?
+------------------------------------------------------------------------------------------------------------------------------
+
+🔐 Security-Focused Questions
+
+How do you ensure secrets never end up in your .tfstate file or .tfvars files that are committed to Git?
+What is SOPS or Vault integration with Terraform and have you used either in a real project?
+How do you implement least-privilege IAM roles for the service account that runs Terraform in your CI/CD pipeline?
+How do you do a security audit of your Terraform code before applying — any tools like tfsec, checkov, or terrascan?
+------------------------------------------------------------------------------------------------------------------------------
+
+🧠 Architecture & Design Thinking
+
+Your company is onboarding 10 new microservices every quarter — how do you design a Terraform structure that scales without becoming unmanageable?
+How do you handle cross-account deployments using Terraform in an AWS multi-account setup (e.g., with AWS Organizations)?
+When would you choose Terragrunt over plain Terraform, and have you ever used it?
+How do you test your Terraform code — unit tests, integration tests? Have you used tools like Terratest?
+Your organization wants to enforce standards across all Terraform code (naming conventions, required tags, approved modules only) — how do you implement this?
