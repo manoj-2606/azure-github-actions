@@ -21,7 +21,7 @@ variables:
   # BACKEND_RESOURCE_GROUP, BACKEND_STORAGE_ACCOUNT, BACKEND_CONTAINER
 
   - name: TF_WORKING_DIR
-    value: terraform
+    value: Terraform/Day12/terraform
   - name: TF_VERSION
     value: latest
 
@@ -37,6 +37,7 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
+          - checkout: self
           - template: templates/terraform-plan.yml
             parameters:
               workingDir: $(TF_WORKING_DIR)
