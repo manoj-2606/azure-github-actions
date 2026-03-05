@@ -1,0 +1,66 @@
+parameters:
+  - name: workingDir
+    type: string
+  - name: tfVersion
+    type: string
+  - name: backendResourceGroup
+    type: string
+  - name: backendStorageAccount
+    type: string
+  - name: backendContainer
+    type: string
+  - name: armClientId
+    type: string
+  - name: armTenantId
+    type: string
+  - name: armSubscriptionId
+    type: string
+
+steps:
+
+  # ── Install Terraform ─────────────────────────────────────
+  - task: TerraformInstaller@1
+    displayName: "Install Terraform ${{ parameters.tfVersion }}"
+    inputs:
+      terraformVersion: ${{ parameters.tfVersion }}
+
+  # ── Download plan file published by Plan stage ────────────
+  - task: DownloadPipelineArtifact@2
+    displayName: "Download Terraform Plan"
+    inputs:
+      artifact: tfplan
+      targetPath: "${{ parameters.workingDir }}"
+
+  # ── Terraform Init (required again in new agent) ──────────
+  - task: TerraformTaskV4@4
+    displayName: "Terraform Init"
+    inputs:
+      provider: azurerm
+      command: init
+      workingDirectory: ${{ parameters.workingDir }}
+      backendServiceArm: "day12-service-connection"
+      backendAzureRmResourceGroupName: ${{ parameters.backendResourceGroup }}
+      backendAzureRmStorageAccountName: ${{ parameters.backendStorageAccount }}
+      backendAzureRmContainerName: ${{ parameters.backendContainer }}
+      backendAzureRmKey: "day12.terraform.tfstate"
+    env:
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ parameters.armClientId }}
+      ARM_TENANT_ID: ${{ parameters.armTenantId }}
+      ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
+
+  # ── Terraform Apply ───────────────────────────────────────
+  - task: TerraformTaskV4@4
+    displayName: "Terraform Apply"
+    inputs:
+      provider: azurerm
+      command: apply
+      workingDirectory: ${{ parameters.workingDir }}
+      commandOptions: "-auto-approve tfplan"
+      environmentServiceNameAzureRM: "day12-service-connection"
+    env:
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ parameters.armClientId }}
+      ARM_TENANT_ID: ${{ parameters.armTenantId }}
+      ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
+      ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
