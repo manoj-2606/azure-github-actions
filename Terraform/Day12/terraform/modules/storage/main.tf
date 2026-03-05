@@ -11,7 +11,6 @@ resource "azurerm_storage_account" "main" {
 
   # ── Security hardening ────────────────────────────────────
   min_tls_version           = "TLS1_2"
-  shared_access_key_enabled  = false
 
   # ── Deny all traffic by default ───────────────────────────
   # Private endpoint is the ONLY allowed path
