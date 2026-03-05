@@ -15,7 +15,7 @@ pr:
       - terraform/**
 
 variables:
-  - group: day12-vars
+  - group: Terraform-day12-vars
   # Variable group must have these in Azure DevOps Library:
   # ARM_CLIENT_ID, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID
   # BACKEND_RESOURCE_GROUP, BACKEND_STORAGE_ACCOUNT, BACKEND_CONTAINER
