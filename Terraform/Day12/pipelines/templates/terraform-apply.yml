@@ -53,7 +53,7 @@ steps:
       command: apply
       workingDirectory: ${{ parameters.workingDir }}
       commandOptions: "-auto-approve tfplan"
-      environmentServiceNameAzureRM: "day12-service-connection"
+      environmentServiceNameAzureRM: "azure-service-connection"
     env:
       ARM_USE_OIDC: true
       ARM_CLIENT_ID: ${{ parameters.armClientId }}

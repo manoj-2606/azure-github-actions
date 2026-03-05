@@ -18,13 +18,11 @@ parameters:
 
 steps:
 
-  # ── Install Terraform ─────────────────────────────────────
   - task: TerraformInstaller@1
     displayName: "Install Terraform ${{ parameters.tfVersion }}"
     inputs:
       terraformVersion: ${{ parameters.tfVersion }}
 
-  # ── Terraform Init ────────────────────────────────────────
   - task: TerraformTaskV4@4
     displayName: "Terraform Init"
     inputs:
@@ -32,7 +30,6 @@ steps:
       command: init
       workingDirectory: ${{ parameters.workingDir }}
       backendServiceArm: "azure-service-connection"
-      # day12-service-connection = name of your Azure DevOps service connection
       backendAzureRmResourceGroupName: ${{ parameters.backendResourceGroup }}
       backendAzureRmStorageAccountName: ${{ parameters.backendStorageAccount }}
       backendAzureRmContainerName: ${{ parameters.backendContainer }}
@@ -43,7 +40,6 @@ steps:
       ARM_TENANT_ID: ${{ parameters.armTenantId }}
       ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
 
-  # ── Terraform Validate ────────────────────────────────────
   - task: TerraformTaskV4@4
     displayName: "Terraform Validate"
     inputs:
@@ -56,7 +52,6 @@ steps:
       ARM_TENANT_ID: ${{ parameters.armTenantId }}
       ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
 
-  # ── Terraform Plan ────────────────────────────────────────
   - task: TerraformTaskV4@4
     displayName: "Terraform Plan"
     inputs:
@@ -68,14 +63,13 @@ steps:
         -var="client_id=${{ parameters.armClientId }}"
         -var="tenant_id=${{ parameters.armTenantId }}"
         -var="subscription_id=${{ parameters.armSubscriptionId }}"
-      environmentServiceNameAzureRM: "day12-service-connection"
+      environmentServiceNameAzureRM: "azure-service-connection"
     env:
       ARM_USE_OIDC: true
       ARM_CLIENT_ID: ${{ parameters.armClientId }}
       ARM_TENANT_ID: ${{ parameters.armTenantId }}
       ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
 
-  # ── Publish plan file so Apply stage can use it ───────────
   - task: PublishPipelineArtifact@1
     displayName: "Publish Terraform Plan"
     inputs:

@@ -18,13 +18,11 @@ parameters:
 
 steps:
 
-  # ── Install Terraform ─────────────────────────────────────
   - task: TerraformInstaller@1
     displayName: "Install Terraform ${{ parameters.tfVersion }}"
     inputs:
       terraformVersion: ${{ parameters.tfVersion }}
 
-  # ── Terraform Init ────────────────────────────────────────
   - task: TerraformTaskV4@4
     displayName: "Terraform Init"
     inputs:
@@ -42,7 +40,6 @@ steps:
       ARM_TENANT_ID: ${{ parameters.armTenantId }}
       ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
 
-  # ── Terraform Destroy ─────────────────────────────────────
   - task: TerraformTaskV4@4
     displayName: "Terraform Destroy"
     inputs:
@@ -54,41 +51,9 @@ steps:
         -var="client_id=${{ parameters.armClientId }}"
         -var="tenant_id=${{ parameters.armTenantId }}"
         -var="subscription_id=${{ parameters.armSubscriptionId }}"
-      environmentServiceNameAzureRM: "day12-service-connection"
+      environmentServiceNameAzureRM: "azure-service-connection"
     env:
       ARM_USE_OIDC: true
       ARM_CLIENT_ID: ${{ parameters.armClientId }}
       ARM_TENANT_ID: ${{ parameters.armTenantId }}
       ARM_SUBSCRIPTION_ID: ${{ parameters.armSubscriptionId }}
-# ```
-
-# ---
-
-# ## ✅ STEP 7 Complete — 4 files, copy-paste ready
-
-# | File | Paste into |
-# |---|---|
-# | `azure-pipelines.yml` | `pipelines/azure-pipelines.yml` |
-# | `terraform-plan.yml` | `pipelines/templates/terraform-plan.yml` |
-# | `terraform-apply.yml` | `pipelines/templates/terraform-apply.yml` |
-# | `terraform-destroy.yml` | `pipelines/templates/terraform-destroy.yml` |
-
-# **4 things to understand:**
-
-# `day12-service-connection` — this name must exactly match the service connection you create in Azure DevOps under **Project Settings → Service Connections**. It must be an Azure Resource Manager connection with workload identity federation (OIDC).
-
-# `day12-vars` variable group — create this in **Pipelines → Library → Variable Groups**. Add `ARM_CLIENT_ID`, `ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`, `BACKEND_RESOURCE_GROUP`, `BACKEND_STORAGE_ACCOUNT`, `BACKEND_CONTAINER` as variables.
-
-# Apply stage uses `deployment` job type not regular `job` — this is required to link to an **environment** in Azure DevOps so you can add approval gates before apply runs.
-
-# Destroy only triggers when `BUILD_DESTROY=true` — when you manually run the pipeline, add this variable. It will never fire accidentally on a normal push.
-
-# ---
-# ```
-# Step 1 — Foundation files                              ✅
-# Step 2 — providers.tf, backend.tf, variables.tf        ✅
-# Step 3 — modules/networking                            ✅
-# Step 4 — modules/storage + modules/keyvault            ✅
-# Step 5 — modules/private-endpoints + DNS zones         ✅
-# Step 6 — root main.tf + outputs.tf                     ✅
-# Step 7 — Azure DevOps pipeline YAML files              ✅
