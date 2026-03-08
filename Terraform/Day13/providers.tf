@@ -7,6 +7,13 @@ terraform {
       version = "~> 3.100"
     }
   }
+
+  backend "azurerm" {
+    resource_group_name  = "rg-tfstate-day13"
+    storage_account_name = "sttfstateday13"
+    container_name       = "tfstate"
+    key                  = "day13.terraform.tfstate"
+  }
 }
 
 provider "azurerm" {
