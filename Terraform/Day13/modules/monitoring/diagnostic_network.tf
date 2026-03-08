@@ -10,11 +10,6 @@ resource "azurerm_monitor_diagnostic_setting" "nsg" {
   enabled_log {
     category = "NetworkSecurityGroupRuleCounter"
   }
-
-  metric {
-    category = "AllMetrics"
-    enabled  = true
-  }
 }
 
 resource "azurerm_monitor_diagnostic_setting" "vnet" {
