@@ -1,0 +1,54 @@
+DAY 13 — COMMANDS REFERENCE
+============================
+
+AZURE CLI COMMANDS
+------------------
+az login
+az account show
+az account set --subscription "<subscription-id>"
+az group create --name rg-monitoring-day13 --location northeurope
+az monitor log-analytics workspace show --resource-group rg-monitoring-day13 --workspace-name law-day13
+az monitor diagnostic-settings list --resource "<resource-id>"
+az monitor activity-log list --max-events 10
+az monitor log-analytics query --workspace "<workspace-id>" --analytics-query "AzureDiagnostics | take 10"
+
+TERRAFORM COMMANDS
+------------------
+terraform init
+terraform fmt -recursive
+terraform validate
+terraform plan -out=day13.tfplan
+terraform apply day13.tfplan
+terraform output
+terraform state list
+terraform show
+terraform destroy
+
+GIT COMMANDS
+------------
+git init
+git add .
+git commit -m "day13: initialize project structure and providers"
+git add modules/monitoring/
+git commit -m "day13: add log analytics workspace monitoring module"
+git add main.tf variables.tf outputs.tf terraform.tfvars
+git commit -m "day13: wire monitoring module into root configuration"
+git add modules/monitoring/diagnostic_keyvault.tf
+git commit -m "day13: add diagnostic settings for key vault"
+git add modules/monitoring/diagnostic_storage.tf
+git commit -m "day13: add diagnostic settings for storage account"
+git add modules/monitoring/diagnostic_network.tf
+git commit -m "day13: add diagnostic settings for nsg and vnet"
+git add main.tf
+git commit -m "day13: add subscription activity log diagnostic setting"
+git add .
+git commit -m "day13: final apply verified - logs confirmed in log analytics workspace"
+
+KQL VALIDATION QUERIES (run in Azure Portal)
+--------------------------------------------
+AzureDiagnostics | take 10
+AzureDiagnostics | where ResourceType == "VAULTS" | take 10
+AzureDiagnostics | where ResourceType == "STORAGEACCOUNTS" | take 10
+AzureActivity | take 10
+AzureActivity | where OperationNameValue contains "write" | take 10
+Heartbeat | summarize count() by Computer
