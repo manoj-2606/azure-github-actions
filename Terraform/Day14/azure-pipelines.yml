@@ -1,0 +1,45 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Terraform/Day14/**
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Terraform/Day14/**
+
+variables:
+  - template: pipelines/vars/centralindia.yml
+
+stages:
+  - stage: Plan
+    displayName: Terraform Plan
+    jobs:
+      - job: TerraformPlan
+        displayName: Plan Governance Infrastructure
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - template: pipelines/templates/tf-plan.yml
+
+  - stage: Apply
+    displayName: Terraform Apply
+    dependsOn: Plan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: TerraformApply
+        displayName: Apply Governance Infrastructure
+        environment: day14-governance
+        pool:
+          vmImage: ubuntu-latest
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: pipelines/templates/tf-apply.yml
