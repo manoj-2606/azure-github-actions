@@ -42,7 +42,15 @@ steps:
 
         terraform fmt -recursive -check
         terraform validate
-        terraform plan -out=$(Build.ArtifactStagingDirectory)/day14.tfplan
+        
+        terraform plan \
+          -var="resource_group_name=rg-governance-day14" \
+          -var="location=centralindia" \
+          -var="prefix=day14" \
+          -var="subscription_id=$(az account show --query id -o tsv)" \
+          -var='allowed_locations=["centralindia","westeurope"]' \
+          -var='required_tags=["environment","owner","costCenter"]' \
+          -out=$(Build.ArtifactStagingDirectory)/day14.tfplan
 
   - publish: $(Build.ArtifactStagingDirectory)/day14.tfplan
     artifact: tfplan
