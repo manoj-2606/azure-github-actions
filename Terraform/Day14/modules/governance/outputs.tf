@@ -5,5 +5,5 @@ output "policy_initiative_id" {
 
 output "policy_assignment_id" {
   description = "Policy assignment ID"
-  value       = azurerm_policy_assignment.governance_baseline.id
+  value       = azurerm_resource_group_policy_assignment.governance_baseline.id
 }
