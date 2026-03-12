@@ -1,0 +1,87 @@
+DAY 14 — PURPOSE OF THIS PROJECT
+==================================
+
+THE CORE PROBLEM THIS SOLVES
+------------------------------
+You built secure infrastructure across 13 days.
+Proper RBAC. Private endpoints. No public access. Monitoring.
+
+Now imagine a new engineer joins the team.
+They create a storage account with public_network_access_enabled = true.
+They deploy to East US instead of Central India.
+They forget to add tags — nobody can track the cost or owner.
+They skip diagnostic settings — the resource is blind.
+
+All your previous security work is now bypassed.
+Not maliciously — just by someone who did not know the rules.
+
+Azure Policy solves this by making non-compliance technically impossible.
+The Azure Resource Manager API rejects the deployment before it is created.
+Terraform plan shows the violation before apply runs.
+No human review needed. No checklist. The platform enforces the rules.
+
+WHAT AZURE POLICY IS
+---------------------
+Azure Policy is a set of rules evaluated by the Azure Resource Manager
+every time a resource is created or modified.
+
+The flow is:
+  Developer runs terraform apply
+        ↓
+  Terraform calls Azure Resource Manager API
+        ↓
+  Azure Policy evaluates the request against all assigned policies
+        ↓
+  If compliant → resource is created
+  If non-compliant → request is rejected with a policy violation error
+
+Policy lives at the Azure control plane. It does not matter whether
+the resource is created via Terraform, az cli, the portal, or a REST API call.
+The policy is evaluated regardless of the tool.
+
+WHAT POLICY EFFECTS ARE
+------------------------
+Deny            → Request is rejected immediately. Resource is not created.
+Audit           → Resource is created but marked as non-compliant in Azure Policy dashboard.
+DeployIfNotExists → If a condition is not met, Azure automatically deploys a remediation resource.
+Modify          → Azure automatically adds or changes properties to make the resource compliant.
+Append          → Adds fields to the resource before creation.
+
+Today you use Deny for hard requirements and Audit for soft requirements.
+
+WHAT A POLICY INITIATIVE IS
+----------------------------
+A Policy Initiative (also called a Policy Set Definition) is a group of policies
+bundled together and assigned as a single unit.
+
+Instead of assigning 4 separate policies to a resource group, you define one
+initiative containing all 4 and assign the initiative once. This is how real
+organisations manage policy at scale — 20, 50, 100 policies in one assignment.
+
+WHY THIS MATTERS IN DAY-TO-DAY DEVOPS
+---------------------------------------
+Without policy:
+  - Every PR review must manually check compliance
+  - Security reviews are periodic and miss things
+  - Drift happens silently — someone clicks in portal
+
+With policy:
+  - Non-compliant resources cannot be created
+  - Compliance is continuous, not periodic
+  - The platform enforces rules 24/7 with no human involvement
+  - Audit logs show every policy evaluation — full evidence trail for GDPR/ISO 27001
+
+WHY THIS MATTERS FOR FINLAND/EU
+---------------------------------
+Finnish and EU companies must demonstrate active governance of cloud resources.
+GDPR Article 25 (Data Protection by Design) requires that privacy controls are
+built into systems by default — not added as an afterthought.
+
+Azure Policy + Terraform is how you implement Data Protection by Design:
+  - Deny public storage → personal data cannot be accidentally exposed
+  - Require diagnostic settings → audit trail exists by default
+  - Restrict regions → data stays in EU-approved locations
+  - Require tags → every resource has an accountable owner
+
+This is governance-as-code. The same version control, review, and pipeline
+discipline you apply to infrastructure applies to the rules governing infrastructure.

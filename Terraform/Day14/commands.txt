@@ -1,0 +1,48 @@
+DAY 14 — COMMANDS REFERENCE
+============================
+
+AZURE CLI — BACKEND BOOTSTRAP (run once before pipeline)
+----------------------------------------------------------
+az group create --name rg-tfstate-day14 --location centralindia
+az storage account create --name sttfstateday14 --resource-group rg-tfstate-day14 --location centralindia --sku Standard_LRS --kind StorageV2 --min-tls-version TLS1_2
+az storage container create --name tfstate --account-name sttfstateday14
+
+AZURE CLI — VERIFICATION AFTER APPLY
+--------------------------------------
+az policy assignment list --resource-group rg-governance-day14 --output table
+az policy definition list --query "[?policyType=='Custom']" --output table
+az policy set-definition list --query "[?policyType=='Custom']" --output table
+az policy state list --resource-group rg-governance-day14 --output table
+az policy state summarize --resource-group rg-governance-day14
+
+TERRAFORM COMMANDS (run by pipeline — listed for understanding)
+----------------------------------------------------------------
+terraform init
+terraform fmt -recursive
+terraform validate
+terraform plan -out=day14.tfplan
+terraform apply day14.tfplan
+terraform output
+terraform state list
+terraform destroy
+
+GIT COMMANDS
+------------
+git add Terraform/Day14/ && git commit -m "day14: initialize project structure, providers, and documentation"
+git add Terraform/Day14/providers.tf Terraform/Day14/terraform.tfvars && git commit -m "day14: add remote backend config and provider version locks"
+git add Terraform/Day14/azure-pipelines.yml Terraform/Day14/pipelines/ && git commit -m "day14: add azure devops pipeline with init, plan, apply stages"
+git add Terraform/Day14/modules/governance/policy_definitions.tf && git commit -m "day14: add custom policy definitions for tags, location, and public storage"
+git add Terraform/Day14/modules/governance/policy_initiative.tf && git commit -m "day14: add policy initiative bundling all definitions"
+git add Terraform/Day14/modules/governance/policy_assignments.tf && git commit -m "day14: add policy assignments at resource group scope"
+git add Terraform/Day14/main.tf Terraform/Day14/outputs.tf && git commit -m "day14: wire root module and outputs"
+git add Terraform/Day14/ && git commit -m "day14: complete governance pipeline - policies enforced and verified"
+git push origin main
+
+COMPLIANCE TESTING COMMANDS
+-----------------------------
+# After policy is assigned, try to create a non-compliant resource — should fail
+az storage account create --name testpublicaccount --resource-group rg-governance-day14 --location eastus --sku Standard_LRS
+# Expected: RequestDisallowedByPolicy error
+
+# Check compliance state of all resources in scope
+az policy state list --resource-group rg-governance-day14 --select "resourceId,complianceState,policyDefinitionName" --output table
