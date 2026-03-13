@@ -1,8 +1,0 @@
-variables:
-  TF_WORKING_DIR: "Terraform/Day14"
-  TF_STATE_RG: "rg-tfstate-day14"
-  TF_STATE_SA: "sttfstateday14"
-  TF_STATE_CONTAINER: "tfstate"
-  TF_STATE_KEY: "day14.terraform.tfstate"
-  ARM_LOCATION: "centralindia"
-  SERVICE_CONNECTION: "azure-service-connection"
